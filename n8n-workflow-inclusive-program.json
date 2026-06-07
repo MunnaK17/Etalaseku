@@ -1,0 +1,141 @@
+{
+  "name": "EtalaseKu - Inclusive Program Submissions",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "etalaseku-inclusive-program",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "etalaseku-inclusive-program",
+      "webhookPath": "etalaseku-inclusive-program"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Clean and normalize the incoming data\nconst data = $input.first().json;\n\nconst disabilityTypeMap = {\n  'physical': 'Disabilitas Fisik',\n  'visual': 'Disabilitas Netra / Tunanetra',\n  'hearing': 'Disabilitas Rungu / Wicara',\n  'intellectual': 'Disabilitas Intelektual',\n  'mental': 'Disabilitas Mental / Psikososial',\n  'multiple': 'Disabilitas Ganda',\n};\n\nconst row = {\n  'Submission ID': 'INC-' + Date.now(),\n  'Timestamp': new Date().toISOString(),\n  'Nama Lengkap': data.name || '',\n  'Email': data.email || '',\n  'WhatsApp': data.whatsapp || '',\n  'Jenis Disabilitas': data.disability_type_display || disabilityTypeMap[data.disability_type] || data.disability_type || '',\n  'Ceritakan': data.story || '',\n  'No Sertifikat': data.certificate || '-',\n  'Submitted At': data.submitted_at || new Date().toISOString(),\n  'Status': 'Menunggu Review',\n};\n\nreturn [{ json: row }];"
+      },
+      "id": "clean-data",
+      "name": "Clean & Map Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "0",
+        "range": "A1",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "id": "google-sheets-append",
+      "name": "Append to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.2,
+      "position": [710, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-cred",
+          "name": "Google Sheets OAuth2"
+        }
+      },
+      "sheetId": "{{ $env.GOOGLE_SHEETS_SPREADSHEET_ID }}"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "sheetId": "0",
+        "column": "K",
+        "searchValue": "={{ $json['Submission ID'] }}",
+        "dataMode": "exact",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "id": "mark-submitted",
+      "name": "Mark Row Submitted",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.2,
+      "position": [940, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-cred",
+          "name": "Google Sheets OAuth2"
+        }
+      },
+      "sheetId": "{{ $env.GOOGLE_SHEETS_SPREADSHEET_ID }}"
+    },
+    {
+      "parameters": {
+        "to": "={{ $json['Email'] }}",
+        "subject": "Permohonan Program Inklusif EtalaseKu - Sedang Diproses",
+        "emailHtml": "<div style=\"font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px;\">\n  <div style=\"background: linear-gradient(135deg, #7c3aed, #db2777); padding: 32px; text-align: center; border-radius: 16px 16px 0 0;\">\n    <h1 style=\"color: white; margin: 0; font-size: 24px;\">🎉 Terima Kasih!</h1>\n    <p style=\"color: rgba(255,255,255,0.9); margin: 8px 0 0;\">Permohonan Program Inklusif EtalaseKu</p>\n  </div>\n  <div style=\"padding: 32px; background: #fafafa; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;\">\n    <p style=\"color: #374151; font-size: 16px; margin: 0 0 20px;\">Halo <strong>{{ $json['Nama Lengkap'] }}</strong>,</p>\n    <p style=\"color: #374151; line-height: 1.7;\">Terima kasih telah mengajukan <strong>Program Inklusif EtalaseKu</strong>. Permohonan Anda telah kami terima dan sedang dalam proses review.</p>\n    <div style=\"background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin: 24px 0;\">\n      <p style=\"color: #6b7280; font-size: 14px; margin: 0 0 8px;\"><strong>Detail Pengajuan:</strong></p>\n      <table style=\"width: 100%; font-size: 14px;\">\n        <tr><td style=\"color: #6b7280; padding: 4px 0;\">Nama:</td><td style=\"color: #111827; font-weight: 600;\">{{ $json['Nama Lengkap'] }}</td></tr>\n        <tr><td style=\"color: #6b7280; padding: 4px 0;\">Email:</td><td style=\"color: #111827;\">{{ $json['Email'] }}</td></tr>\n        <tr><td style=\"color: #6b7280; padding: 4px 0;\">Jenis Disabilitas:</td><td style=\"color: #111827;\">{{ $json['Jenis Disabilitas'] }}</td></tr>\n        <tr><td style=\"color: #6b7280; padding: 4px 0;\">ID Permohonan:</td><td style=\"color: #7c3aed; font-weight: 600;\">{{ $json['Submission ID'] }}</td></tr>\n      </table>\n    </div>\n    <p style=\"color: #374151; line-height: 1.7;\">Tim kami akan memproses permohonan Anda dalam <strong>1–3 hari kerja</strong>. Anda akan mendapat email notifikasi begitu hasilnya siap.</p>\n    <p style=\"color: #9ca3af; font-size: 12px; margin-top: 32px; text-align: center;\">© 2026 EtalaseKu — Dibuat dengan ❤️ untuk semua orang</p>\n  </div>\n</div>",
+        "fromName": "EtalaseKu <noreply@etalaseku.test>",
+        "options": {}
+      },
+      "id": "send-email-confirmation",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.email",
+      "typeVersion": 2,
+      "position": [1170, 300],
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Clean & Map Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean & Map Data": {
+      "main": [
+        [
+          {
+            "node": "Append to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "timezone": "Asia/Jakarta"
+  },
+  "staticData": null,
+  "tags": ["etalaseku", "inclusive-program", "submissions"],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-07",
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupMode": "credential-per-node",
+    "templateId": "etalaseku-inclusive-program-v1",
+    "description": "Menerima submission form Program Inklusif dari landing page EtalaseKu → tulis ke Google Sheets → kirim email konfirmasi"
+  }
+}
