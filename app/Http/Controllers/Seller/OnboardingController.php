@@ -48,6 +48,7 @@ class OnboardingController extends Controller
                 'whatsapp' => $request->whatsapp,
                 'theme' => 'minimal',
                 'plan' => 'free',
+                'is_active' => true,
             ]);
 
             Page::ensureDefaultForUser($user->id, 'Halaman Utama', 1);

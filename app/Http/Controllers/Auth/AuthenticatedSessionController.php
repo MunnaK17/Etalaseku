@@ -14,9 +14,17 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('auth.login');
+        $left = random_int(1, 9);
+        $right = random_int(1, 9);
+
+        $request->session()->put('login_math_question', "{$left} + {$right}");
+        $request->session()->put('login_math_answer', $left + $right);
+
+        return view('auth.login', [
+            'mathQuestion' => $request->session()->get('login_math_question'),
+        ]);
     }
 
     /**
@@ -27,6 +35,7 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+        $request->session()->forget(['login_math_question', 'login_math_answer']);
 
         // Check if user has a store, redirect to onboarding if not
         $user = $request->user();

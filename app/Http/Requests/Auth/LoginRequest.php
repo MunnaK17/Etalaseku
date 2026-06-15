@@ -30,6 +30,17 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'bot_answer' => [
+                'required',
+                'integer',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $expectedAnswer = $this->session()->get('login_math_answer');
+
+                    if ($expectedAnswer === null || (int) $value !== (int) $expectedAnswer) {
+                        $fail('Jawaban verifikasi tidak sesuai.');
+                    }
+                },
+            ],
         ];
     }
 

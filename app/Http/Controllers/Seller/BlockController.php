@@ -508,6 +508,12 @@ class BlockController extends Controller
 
         $ctaType = $data['cta_type'] ?? ($type === 'digital_product' ? 'checkout' : 'whatsapp');
         $data['cta_type'] = in_array($ctaType, ['whatsapp', 'checkout'], true) ? $ctaType : 'whatsapp';
+
+        if ($type === 'product') {
+            $data['cta_type'] = 'whatsapp';
+            unset($data['product_id']);
+        }
+
         unset($data['cta_url']);
 
         if ($data['cta_type'] === 'checkout') {

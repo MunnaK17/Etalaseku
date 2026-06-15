@@ -699,23 +699,30 @@
                                 <input type="text" x-model="formData.title" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Emoji (Optional)</label>
-                                <input type="text" x-model="formData.emoji" maxlength="2" placeholder="🎁" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            </div>
-                            <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
                                 <textarea x-model="formData.description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Harga (Rp)</label>
-                                <input type="number" x-model="formData.price" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <input type="text"
+                                       :value="formatPriceInput(formData.price)"
+                                       inputmode="numeric"
+                                       pattern="[0-9]*"
+                                       placeholder="Rp.100.000"
+                                       @input="formData.price = parsePriceInput($event.target.value); $event.target.value = formatPriceInput(formData.price)"
+                                       @blur="$event.target.value = formatPriceInput(formData.price)"
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <p class="text-xs text-gray-500 mt-1">Ketik angka saja, sistem akan otomatis memformat. Contoh: 100000 menjadi Rp.100.000.</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">CTA Type</label>
                                 <select x-model="formData.cta_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                     <option value="whatsapp">WhatsApp</option>
-                                    <option value="checkout">Checkout</option>
+                                    <template x-if="formData.type === 'digital_product'">
+                                        <option value="checkout">Checkout</option>
+                                    </template>
                                 </select>
+                                <p x-show="formData.type === 'product'" class="text-xs text-gray-500 mt-1">Produk biasa memakai CTA WhatsApp. Checkout tersedia untuk Digital Product.</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Gambar Produk (Opsional)</label>
@@ -961,7 +968,6 @@ function blockDashboard() {
             thumbnail_url: '',
             image_link: '',
             socials: {},
-            emoji: '',
             description: '',
             price: 0,
             cta_type: 'whatsapp',
@@ -1231,10 +1237,10 @@ function blockDashboard() {
             this.formData.video_url = '';
             this.formData.thumbnail_url = '';
             this.formData.image_link = '';
-            this.formData.emoji = '';
             this.formData.description = '';
             this.formData.price = 0;
             this.formData.cta_type = this.getDefaultCtaType(type);
+            this.normalizeCtaTypeForBlockType();
             this.imagePreview = null;
             this.productImagePreview = null;
             this.initSocials();
@@ -1302,10 +1308,10 @@ function blockDashboard() {
                 this.formData.alt_text = content.alt || '';
                 this.formData.video_url = content.video_url || '';
                 this.formData.image_link = content.link || '';
-                this.formData.emoji = content.emoji || '';
                 this.formData.description = content.description || '';
                 this.formData.price = content.price || 0;
                 this.formData.cta_type = content.cta_type || this.getDefaultCtaType(block.type);
+                this.normalizeCtaTypeForBlockType();
 
                 // Socials
                 if (content.socials) {
@@ -1369,8 +1375,8 @@ function blockDashboard() {
                     break;
                 case 'product':
                 case 'digital_product':
+                    this.normalizeCtaTypeForBlockType();
                     content = {
-                        emoji: this.formData.emoji,
                         description: this.formData.description,
                         price: this.formData.price,
                         cta_type: this.formData.cta_type || this.getDefaultCtaType(this.formData.type),
@@ -1416,6 +1422,29 @@ function blockDashboard() {
 
         getDefaultCtaType(type) {
             return type === 'digital_product' ? 'checkout' : 'whatsapp';
+        },
+
+        normalizeCtaTypeForBlockType() {
+            if (this.formData.type === 'product') {
+                this.formData.cta_type = 'whatsapp';
+            }
+            if (this.formData.type === 'digital_product' && !['whatsapp', 'checkout'].includes(this.formData.cta_type)) {
+                this.formData.cta_type = 'checkout';
+            }
+        },
+
+        parsePriceInput(value) {
+            return String(value ?? '').replace(/\D/g, '');
+        },
+
+        formatPriceInput(value) {
+            const digits = this.parsePriceInput(value);
+
+            if (!digits || Number(digits) === 0) {
+                return '';
+            }
+
+            return 'Rp.' + Number(digits).toLocaleString('id-ID');
         },
 
         extractEmbedUrl(url) {

@@ -231,6 +231,8 @@
     .icon-teal svg { color: #14b8a6; }
     .icon-pink { background: rgba(236, 72, 153, 0.15); }
     .icon-pink svg { color: #ec4899; }
+    .icon-red { background: rgba(239, 68, 68, 0.15); }
+    .icon-red svg { color: #ef4444; }
 
     /* Form Card */
     .form-card {
@@ -527,6 +529,9 @@
         flex-wrap: wrap;
         gap: 16px;
     }
+    .status-card-body + .status-card-body {
+        border-top: 1px solid rgba(239, 68, 68, 0.16);
+    }
     .status-info p {
         font-size: 14px;
         color: var(--text-secondary);
@@ -582,6 +587,37 @@
     }
     .toggle-btn-inactive:hover {
         background: rgba(16, 185, 129, 0.2);
+    }
+    .delete-account-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        background: #ef4444;
+        color: #fff;
+        font-weight: 700;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+    .delete-account-btn:hover {
+        background: #dc2626;
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(239, 68, 68, 0.24);
+    }
+    .delete-account-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+    .delete-warning {
+        border: 1px solid rgba(239, 68, 68, 0.28);
+        background: rgba(239, 68, 68, 0.08);
+        color: var(--text-secondary);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 13px;
+        line-height: 1.55;
     }
 
     /* Footer Links */
@@ -969,6 +1005,59 @@
             </div>
         </div>
 
+        <!-- Delete Account Modal -->
+        <div id="deleteAccountModal" class="modal-backdrop" aria-hidden="true">
+            <div class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="deleteAccountModalTitle">
+                <div class="settings-modal-header">
+                    <div>
+                        <h2 id="deleteAccountModalTitle">Delete Account</h2>
+                        <p>Hapus akun seller dan seluruh data terkait secara permanen.</p>
+                    </div>
+                    <button type="button" class="modal-close-btn" onclick="closeDeleteAccountModal()" aria-label="Tutup modal">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form method="POST" action="{{ route('profile.destroy') }}">
+                    @csrf
+                    @method('DELETE')
+
+                    <div class="settings-modal-body">
+                        <div class="delete-warning">
+                            Setelah akun dihapus, etalase, produk, blok, data wallet, pesanan, dan pengaturan akun tidak dapat dipulihkan. Masukkan password untuk konfirmasi.
+                        </div>
+
+                        <div class="modal-form-grid" style="margin-top: 18px;">
+                            <div class="form-group">
+                                <label for="delete_account_password" class="form-label">Password Akun</label>
+                                <input type="password"
+                                       id="delete_account_password"
+                                       name="password"
+                                       class="form-input {{ $errors->userDeletion->has('password') ? 'error' : '' }}"
+                                       autocomplete="current-password"
+                                       required>
+                                @if($errors->userDeletion->has('password'))
+                                    <p class="form-error">{{ $errors->userDeletion->first('password') }}</p>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="button" class="modal-cancel-btn" onclick="closeDeleteAccountModal()">Batal</button>
+                            <button type="submit" class="delete-account-btn">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m3 0V5a2 2 0 012-2h0a2 2 0 012 2v2"/>
+                                </svg>
+                                Hapus Akun
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Danger Zone -->
         <div class="status-card">
             <div class="status-card-header">
@@ -996,6 +1085,19 @@
                         {{ $store->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
                     </button>
                 </form>
+            </div>
+            <div class="status-card-body">
+                <div class="status-info">
+                    <h3>Delete Account</h3>
+                    <p>Hapus akun {{ auth()->user()->email }} secara permanen.</p>
+                    <p>Semua data akun dan etalase yang terhubung akan ikut terhapus. Aksi ini tidak dapat dibatalkan.</p>
+                </div>
+                <button type="button" class="delete-account-btn" onclick="openDeleteAccountModal()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m3 0V5a2 2 0 012-2h0a2 2 0 012 2v2"/>
+                    </svg>
+                    Delete Account
+                </button>
             </div>
         </div>
 
@@ -1058,6 +1160,16 @@
         }, 50);
     }
 
+    function openDeleteAccountModal() {
+        const modal = document.getElementById('deleteAccountModal');
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => {
+            document.getElementById('delete_account_password')?.focus();
+        }, 50);
+    }
+
     function closeAccountModal() {
         const modal = document.getElementById('accountModal');
         modal.classList.remove('active');
@@ -1067,6 +1179,13 @@
 
     function closePayoutModal() {
         const modal = document.getElementById('payoutModal');
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+
+    function closeDeleteAccountModal() {
+        const modal = document.getElementById('deleteAccountModal');
         modal.classList.remove('active');
         modal.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
@@ -1084,10 +1203,17 @@
         }
     });
 
+    document.getElementById('deleteAccountModal')?.addEventListener('click', (event) => {
+        if (event.target.id === 'deleteAccountModal') {
+            closeDeleteAccountModal();
+        }
+    });
+
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
             closeAccountModal();
             closePayoutModal();
+            closeDeleteAccountModal();
         }
     });
 
@@ -1097,6 +1223,10 @@
 
     @if(session('open_payout_modal') || $errors->has('payout_bank_name') || $errors->has('payout_account_number') || $errors->has('payout_account_name'))
         openPayoutModal();
+    @endif
+
+    @if($errors->userDeletion->any())
+        openDeleteAccountModal();
     @endif
 </script>
 @endpush

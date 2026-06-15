@@ -213,6 +213,26 @@
                             @enderror
                         </div>
 
+                        <div>
+                            <label for="bot_answer" class="block text-sm font-medium" style="color: var(--text-secondary);">
+                                Verifikasi: {{ $mathQuestion ?? '9 + 7' }} =
+                            </label>
+                            <input
+                                id="bot_answer"
+                                name="bot_answer"
+                                type="number"
+                                inputmode="numeric"
+                                required
+                                autocomplete="off"
+                                placeholder="16"
+                                class="mt-1.5 block w-full rounded-lg shadow-sm placeholder:text-zinc-500 focus:ring-offset-0"
+                                style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); --tw-placeholder-color: var(--text-muted); --tw-ring-color: var(--accent);"
+                            >
+                            @error('bot_answer')
+                                <p class="mt-2 text-sm" style="color: var(--error);">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <div class="flex items-center justify-between gap-4">
                             <label class="flex cursor-pointer select-none items-center gap-2">
                                 <input
