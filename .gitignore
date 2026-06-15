@@ -20,3 +20,8 @@ yarn-error.log
 *.swo
 .DS_Store
 Thumbs.db
+storage/framework/* 
+storage/logs/* 
+bootstrap/cache/*.php 
+storage/app/public/* 
+.env 
