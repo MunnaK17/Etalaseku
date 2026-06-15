@@ -112,7 +112,7 @@
                         REKOMENDASI
                     </div>
                     <div class="text-lg font-semibold text-purple-900 mb-2">Pro</div>
-                    <div class="text-3xl font-bold text-gray-900 mb-1">Mulai Rp 33rb</div>
+                    <div class="text-3xl font-bold text-gray-900 mb-1">Mulai Rp 49rb</div>
                     <p class="text-sm text-gray-500 mb-6">per bulan, billed bulanan</p>
 
                     <ul class="space-y-3">

@@ -40,9 +40,10 @@ class PublicPageController extends Controller
         if ($isPreview && $request->session()->has('preview_store_' . $store->id)) {
             $previewData = $request->session()->get('preview_store_' . $store->id);
 
-            // Override store attributes with preview data
+            // Override store attributes with preview data.
+            // Null is meaningful for removable images in live preview.
             foreach ($previewData as $key => $value) {
-                if ($value !== null) {
+                if ($value !== null || in_array($key, ['banner', 'profile_image', 'background_image'], true)) {
                     $store->$key = $value;
                 }
             }
@@ -105,9 +106,10 @@ class PublicPageController extends Controller
         if ($isPreview && $request->session()->has('preview_store_' . $store->id)) {
             $previewData = $request->session()->get('preview_store_' . $store->id);
 
-            // Override store attributes with preview data
+            // Override store attributes with preview data.
+            // Null is meaningful for removable images in live preview.
             foreach ($previewData as $key => $value) {
-                if ($value !== null) {
+                if ($value !== null || in_array($key, ['banner', 'profile_image', 'background_image'], true)) {
                     $store->$key = $value;
                 }
             }

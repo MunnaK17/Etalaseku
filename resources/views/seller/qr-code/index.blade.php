@@ -400,7 +400,7 @@
                     <!-- QR Preview -->
                     <div class="qr-preview-container">
                         <div class="qr-preview-box">
-                            <img id="qr-image" src="{{ $storeUrl }}" alt="QR Code">
+                            <img id="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ urlencode($storeUrl) }}" alt="QR Code">
                         </div>
                         <p class="qr-preview-text">
                             Scan untuk membuka:<br>

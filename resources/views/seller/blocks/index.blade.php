@@ -284,14 +284,34 @@
                 {{-- Blocks List --}}
                 <div class="blocks-container rounded-xl border p-4">
                     <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-lg font-semibold" style="color: var(--dashboard-text);">Blocks</h2>
-                        <button @click="showBlockSelector = true" class="inline-flex items-center px-3 py-1.5 text-sm rounded-lg transition" style="background-color: var(--accent); color: #000;">
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-lg font-semibold" style="color: var(--dashboard-text);">Blocks</h2>
+                            @if(!$store->isPro())
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                  :class="blocks.length >= 5 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'"
+                                  x-text="blocks.length + '/5'"></span>
+                            @endif
+                        </div>
+                        <button @click="handleAddBlock()" class="inline-flex items-center px-3 py-1.5 text-sm rounded-lg transition"
+                                :class="getAddBlockClass()">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
                             Add new block
                         </button>
                     </div>
+
+                    @if(!$store->isPro())
+                    <div x-show="blocks.length >= 5" class="mb-3 p-3 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <p class="text-sm text-purple-300">Batas maksimal 5 block tercapai.</p>
+                            <a href="{{ route('seller.upgrade') }}" class="ml-auto px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold rounded-lg hover:from-purple-600 hover:to-pink-600">Upgrade PRO</a>
+                        </div>
+                    </div>
+                    @endif
 
                     {{-- Blocks Container --}}
                     <div class="space-y-3" id="blocks-container">
@@ -485,7 +505,17 @@
                             <p class="text-xs text-zinc-500">Produk dengan CTA WhatsApp</p>
                         </button>
 
-                        <button @click="selectBlockType('digital_product')" class="block-type-btn p-4 rounded-xl border-2 border-zinc-700 hover:border-purple-500 hover:bg-purple-500/10 text-left transition" :class="{ 'opacity-50 cursor-not-allowed': !isPro }">
+                        <button @click="selectBlockType('digital_product')" class="block-type-btn p-4 rounded-xl border-2 border-zinc-700 hover:border-purple-500 hover:bg-purple-500/10 text-left transition relative" :class="{ 'opacity-50 cursor-not-allowed': !isPro }">
+                            @unless($store->isPro())
+                            <div class="absolute inset-0 bg-black/60 rounded-xl flex flex-col items-center justify-center z-10">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-2">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    </svg>
+                                </div>
+                                <span class="text-xs font-semibold text-purple-400">PRO</span>
+                            </div>
+                            @endunless
                             <div class="w-10 h-10 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center mb-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -1181,6 +1211,12 @@ function blockDashboard() {
         },
 
         selectBlockType(type) {
+            // Check PRO restriction for digital_product
+            if (type === 'digital_product' && !this.isPro) {
+                this.showProUpgradeMessage();
+                return;
+            }
+
             this.formData.type = type;
             this.formData.id = null;
             this.editingBlock = null;
@@ -1205,6 +1241,45 @@ function blockDashboard() {
 
             this.showBlockSelector = false;
             this.showBlockForm = true;
+        },
+
+        showProUpgradeMessage() {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-3';
+            toast.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <span>Upgrade ke PRO untuk membuat Digital Product!</span>
+                <a href="{{ route('seller.upgrade') }}" class="ml-2 px-3 py-1 bg-white text-purple-600 rounded-md text-sm font-semibold hover:bg-gray-100">Upgrade</a>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        },
+
+        showBlockLimitMessage() {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-3';
+            toast.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <span>Batas maksimal 5 block tercapai!</span>
+                <a href="{{ route('seller.upgrade') }}" class="ml-2 px-3 py-1 bg-white text-purple-600 rounded-md text-sm font-semibold hover:bg-gray-100">Upgrade PRO</a>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        },
+
+        handleAddBlock() {
+            if (!this.isPro && this.blocks.length >= 5) {
+                this.showBlockLimitMessage();
+            } else {
+                this.showBlockSelector = true;
+            }
+        },
+
+        getAddBlockClass() {
+            if (!this.isPro && this.blocks.length >= 5) {
+                return 'opacity-50 cursor-not-allowed bg-gray-600 text-gray-400';
+            }
+            return 'bg-yellow-500 text-black hover:bg-yellow-400';
         },
 
         editBlock(block) {

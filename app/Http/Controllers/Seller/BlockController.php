@@ -121,6 +121,7 @@ class BlockController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
+        $store = $user->store;
         $validated = $request->validate([
             'page_id' => 'required|exists:pages,id',
             'type' => 'required|in:link,text,image,video,social_connect,social_network,product,digital_product',
@@ -138,10 +139,20 @@ class BlockController extends Controller
         }
 
         // Check if user can add digital product
-        if ($validated['type'] === 'digital_product' && !$page->user->store->isPro()) {
+        if ($validated['type'] === 'digital_product' && !$store->isPro()) {
             return response()->json([
                 'error' => 'Digital Product hanya tersedia untuk paket Pro.'
             ], 403);
+        }
+
+        // Check block limit for Free users (max 5 blocks)
+        if (!$store->isPro()) {
+            $blockCount = $page->blocks()->count();
+            if ($blockCount >= 5) {
+                return response()->json([
+                    'error' => 'Batas maksimal 5 block tercapai. Upgrade ke PRO untuk block unlimited!'
+                ], 403);
+            }
         }
 
         $content = $validated['content'] ?? null;
@@ -157,7 +168,7 @@ class BlockController extends Controller
         $content = $this->normalizeProductCtaContent(
             $validated['type'],
             $content,
-            $user->store,
+            $store,
             $validated['title'] ?? null,
             $validated['thumbnail_url'] ?? null
         );

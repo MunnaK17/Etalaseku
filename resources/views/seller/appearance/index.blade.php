@@ -1301,14 +1301,14 @@
                         <p class="text-xs text-center text-zinc-400 font-medium">Modern</p>
                         <p class="text-xs text-center text-zinc-500 mt-1">Without top bar</p>
                     </label>
-                    <label class="visual-card {{ $store->layout === 'clean' ? 'selected' : '' }} {{ !$store->isPro() ? 'pro-locked' : '' }}">
+                    <label class="visual-card {{ $store->layout === 'clean' ? 'selected' : '' }} {{ !$store->isPro() ? 'pro-locked' : '' }}" onclick="{{ !$store->isPro() ? 'showProUpgradeMessage()' : '' }}">
                         @if(!$store->isPro())
                             <div class="pro-overlay">
                                 <div class="pro-icon">P</div>
                                 <span class="text-xs font-medium text-zinc-400">PRO</span>
                             </div>
                         @endif
-                        <input type="radio" name="layout" value="clean" {{ $store->layout === 'clean' ? 'checked' : '' }}>
+                        <input type="radio" name="layout" value="clean" {{ $store->layout === 'clean' ? 'checked' : '' }} {{ !$store->isPro() ? 'disabled' : '' }}>
                         <div class="layout-preview clean-preview">
                             <div class="name-bar"></div>
                         </div>
@@ -1526,10 +1526,12 @@
                 <div class="template-grid" id="template-grid">
                     @php
                     $currentTemplate = $store->template;
+                    $freeTemplates = ['feeling_lucky', 'minimal', 'city_vibes', 'splash_wave']; // First 4 templates for free users
                     @endphp
                     @foreach($templatePresets as $key => $preset)
                         @php
                             $isSelected = $currentTemplate === $key;
+                            $isProTemplate = !in_array($key, $freeTemplates);
                             $bgStyle = '';
                             $headerStyle = "background: linear-gradient(135deg, {$preset['header_gradient_start']}, {$preset['header_gradient_end']});";
 
@@ -1552,7 +1554,7 @@
                                 $cardClass = 'template-glow';
                             }
                         @endphp
-                        <label class="template-card {{ $isSelected ? 'selected' : '' }} {{ $cardClass }}"
+                        <label class="template-card {{ $isSelected ? 'selected' : '' }} {{ $cardClass }} {{ $isProTemplate && !$store->isPro() ? 'pro-locked' : '' }}"
                                data-template="{{ $key }}"
                                data-bg-color="{{ $preset['bg_color'] }}"
                                data-bg-secondary="{{ $preset['bg_secondary'] ?? '' }}"
@@ -1562,8 +1564,14 @@
                                data-header-start="{{ $preset['header_gradient_start'] }}"
                                data-header-end="{{ $preset['header_gradient_end'] }}"
                                data-special="{{ $preset['special_class'] ?? '' }}"
-                               onclick="selectTemplate(this)">
-                            <input type="radio" name="template" value="{{ $key }}" {{ $isSelected ? 'checked' : '' }}>
+                               onclick="{{ $isProTemplate && !$store->isPro() ? 'showProUpgradeMessage()' : 'selectTemplate(this)' }}">
+                            @if($isProTemplate && !$store->isPro())
+                                <div class="pro-overlay">
+                                    <div class="pro-icon">P</div>
+                                    <span class="text-xs font-medium text-zinc-400">PRO</span>
+                                </div>
+                            @endif
+                            <input type="radio" name="template" value="{{ $key }}" {{ $isSelected ? 'checked' : '' }} {{ $isProTemplate && !$store->isPro() ? 'disabled' : '' }}>
                             <div class="template-preview" style="{{ $bgStyle }}">
                                 <div class="template-header" style="{{ $headerStyle }};"></div>
                                 <div class="template-content" @if($preset['bg_color'] !== '#FFFFFF' && $preset['bg_color'] !== '#f9fafc') style="background: rgba(255,255,255,0.9);" @endif>
@@ -1583,6 +1591,9 @@
                         </label>
                     @endforeach
                 </div>
+                @unless($store->isPro())
+                    <p class="text-xs text-zinc-500 mt-2 text-center">Upgrade ke PRO untuk mengakses semua 29 template</p>
+                @endunless
                 <div class="template-actions">
                     <button type="button" class="template-clear-btn" onclick="clearTemplateSelection()">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1614,23 +1625,23 @@
                             <div class="bg-type-preview" style="background-color: {{ $store->background_color ?? '#FFFFFF' }};"></div>
                             <p class="bg-type-name">Flat Color</p>
                         </label>
-                        <label class="bg-type-card {{ $store->background_type === 'gradient_up' ? 'selected' : '' }} {{ !$store->isPro() ? 'pro-locked' : '' }}">
+                        <label class="bg-type-card {{ $store->background_type === 'gradient_up' ? 'selected' : '' }} {{ !$store->isPro() ? 'pro-locked' : '' }}" onclick="{{ !$store->isPro() ? 'showProUpgradeMessage()' : '' }}">
                             @if(!$store->isPro())
                                 <span class="badge-pro" style="position: absolute; top: 6px; right: 6px; font-size: 8px; padding: 2px 5px;">PRO</span>
                             @endif
-                            <input type="radio" name="background_type" value="gradient_up" {{ $store->background_type === 'gradient_up' ? 'checked' : '' }}>
+                            <input type="radio" name="background_type" value="gradient_up" {{ $store->background_type === 'gradient_up' ? 'checked' : '' }} {{ !$store->isPro() ? 'disabled' : '' }}>
                             <div class="bg-type-preview" style="background: linear-gradient(180deg, {{ $store->header_gradient_start ?? '#4F46E5' }}22, {{ $store->background_color ?? '#FFFFFF' }});"></div>
                             <p class="bg-type-name">Gradient Up</p>
                         </label>
-                        <label class="bg-type-card {{ $store->background_type === 'gradient_down' ? 'selected' : '' }} {{ !$store->isPro() ? 'pro-locked' : '' }}">
+                        <label class="bg-type-card {{ $store->background_type === 'gradient_down' ? 'selected' : '' }} {{ !$store->isPro() ? 'pro-locked' : '' }}" onclick="{{ !$store->isPro() ? 'showProUpgradeMessage()' : '' }}">
                             @if(!$store->isPro())
                                 <span class="badge-pro" style="position: absolute; top: 6px; right: 6px; font-size: 8px; padding: 2px 5px;">PRO</span>
                             @endif
-                            <input type="radio" name="background_type" value="gradient_down" {{ $store->background_type === 'gradient_down' ? 'checked' : '' }}>
+                            <input type="radio" name="background_type" value="gradient_down" {{ $store->background_type === 'gradient_down' ? 'checked' : '' }} {{ !$store->isPro() ? 'disabled' : '' }}>
                             <div class="bg-type-preview" style="background: linear-gradient(0deg, {{ $store->header_gradient_start ?? '#4F46E5' }}22, {{ $store->background_color ?? '#FFFFFF' }});"></div>
                             <p class="bg-type-name">Gradient Down</p>
                         </label>
-                        <label class="bg-type-card {{ $store->background_type === 'image' ? 'selected' : '' }} {{ !$store->isPro() ? 'pro-locked' : '' }}" onclick="openBackgroundImagePicker(event)">
+                        <label class="bg-type-card {{ $store->background_type === 'image' ? 'selected' : '' }} {{ !$store->isPro() ? 'pro-locked' : '' }}" onclick="{{ !$store->isPro() ? 'showProUpgradeMessage()' : '' }}">
                             @if(!$store->isPro())
                                 <span class="badge-pro" style="position: absolute; top: 6px; right: 6px; font-size: 8px; padding: 2px 5px;">PRO</span>
                             @endif
@@ -1641,7 +1652,7 @@
                                     </svg>
                                 </button>
                             @endif
-                            <input type="radio" name="background_type" value="image" {{ $store->background_type === 'image' ? 'checked' : '' }}>
+                            <input type="radio" name="background_type" value="image" {{ $store->background_type === 'image' ? 'checked' : '' }} {{ !$store->isPro() ? 'disabled' : '' }}>
                             <div id="background-image-preview" class="bg-type-preview bg-gray-100 flex items-center justify-center" @if($store->background_image) style="background-image: url('{{ $store->background_image }}'); background-size: cover; background-position: center;" @endif>
                                 @unless($store->background_image)
                                     <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1940,7 +1951,7 @@
     const previewUrl = '{{ route("seller.appearance.preview-save") }}';
     const storeUrl = '{{ $store->public_url }}';
 
-    // Debounce helper
+    // Debounce helper - batasi request ke server agar tidak spam
     function debounce(func, wait) {
         let timeout;
         return function(...args) {
@@ -1956,18 +1967,34 @@
         }
     }
 
+    // Refresh live preview iframe
     function refreshLivePreview() {
         const iframe = document.getElementById('live-preview-iframe');
         if (!iframe) return;
 
         setPreviewRefreshing(true);
-        iframe.src = `${storeUrl}?preview=1&_=${Date.now()}`;
-        setTimeout(() => setPreviewRefreshing(false), 1000);
+        const previewSrc = new URL(iframe.src || storeUrl, window.location.origin);
+        previewSrc.searchParams.set('preview', '1');
+        previewSrc.searchParams.set('_', Date.now());
+        iframe.src = previewSrc.toString();
     }
 
+    document.getElementById('live-preview-iframe')?.addEventListener('load', () => {
+        setPreviewRefreshing(false);
+    });
+
+    // Save preview to SESSION (bukan database) - auto-triggered on form changes
+    let previewSaveController = null; // Track pending request
     const savePreview = debounce(function() {
         const form = document.getElementById('appearance-form');
         if (!form) return;
+
+        // Abort any pending request
+        if (previewSaveController) {
+            previewSaveController.abort();
+        }
+        previewSaveController = new AbortController();
+        const currentPreviewController = previewSaveController;
 
         const formData = new FormData(form);
         formData.delete('_method');
@@ -1979,6 +2006,7 @@
                 'Accept': 'application/json',
             },
             body: formData,
+            signal: currentPreviewController.signal,
         })
         .then(response => {
             if (!response.ok) {
@@ -1988,10 +2016,20 @@
         })
         .then(data => {
             if (data.success) {
+                // Refresh preview AFTER data is saved
                 refreshLivePreview();
             }
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+            if (err.name !== 'AbortError') {
+                console.error('Preview save error:', err);
+            }
+        })
+        .finally(() => {
+            if (previewSaveController === currentPreviewController) {
+                previewSaveController = null;
+            }
+        });
     }, 600);
 
     // Copy link function
@@ -2006,12 +2044,27 @@
         });
     }
 
+    // Show pro upgrade message
+    function showProUpgradeMessage() {
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-4 right-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-3';
+        toast.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <span>Upgrade ke PRO untuk mengakses template ini!</span>
+            <a href="{{ route('seller.upgrade') }}" class="ml-2 px-3 py-1 bg-white text-purple-600 rounded-md text-sm font-semibold hover:bg-gray-100">Upgrade</a>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
     // Toggle soft shadow
     function toggleSoftShadow(el) {
         el.classList.toggle('active');
         const input = el.querySelector('input');
-        input.value = el.classList.contains('active') ? 1 : 0;
-        savePreview();
+        if (input) {
+            input.value = el.classList.contains('active') ? 1 : 0;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
     }
 
     // Template selection handler
@@ -2029,6 +2082,7 @@
         // Update form input
         const input = card.querySelector('input[type="radio"]');
         input.checked = true;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
 
         // Update visual selection
         document.querySelectorAll('.template-card').forEach(c => {
@@ -2046,7 +2100,7 @@
             card.appendChild(checkDiv);
         }
 
-        // Update color inputs based on template
+        // Update color inputs based on template (this dispatches input events that trigger savePreview via listeners)
         updateFormColors({
             bgColor,
             bgSecondary,
@@ -2057,8 +2111,7 @@
             headerEnd
         });
 
-        // Trigger live preview
-        savePreview();
+        // The input events dispatched by updateFormColors will trigger savePreview() through form listeners
     }
 
     function clearTemplateSelection() {
@@ -2070,12 +2123,11 @@
 
         document.querySelectorAll('input[name="template"][type="radio"]').forEach(input => {
             input.checked = false;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
         });
 
         const templateEmptyInput = document.getElementById('template-empty-value');
         if (templateEmptyInput) templateEmptyInput.value = '';
-
-        savePreview();
     }
 
     // Update form color inputs when template is selected
@@ -2084,6 +2136,7 @@
         const bgColorInput = document.querySelector('input[name="background_color"]');
         if (bgColorInput && colors.bgColor) {
             bgColorInput.value = colors.bgColor;
+            bgColorInput.dispatchEvent(new Event('input', { bubbles: true }));
             const bgSwatch = bgColorInput.closest('.color-input-row')?.querySelector('.color-swatch');
             if (bgSwatch) bgSwatch.style.backgroundColor = colors.bgColor;
         }
@@ -2091,17 +2144,20 @@
         const bgGradientStartInput = document.querySelector('input[name="background_gradient_start"]');
         if (bgGradientStartInput && colors.headerStart) {
             bgGradientStartInput.value = colors.headerStart;
+            bgGradientStartInput.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
         const bgGradientEndInput = document.querySelector('input[name="background_gradient_end"]');
         if (bgGradientEndInput && colors.bgSecondary) {
             bgGradientEndInput.value = colors.bgSecondary;
+            bgGradientEndInput.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
         // Update primary color (header gradient start)
         const primaryColorInput = document.querySelector('input[name="header_gradient_start"]');
         if (primaryColorInput && colors.headerStart) {
             primaryColorInput.value = colors.headerStart;
+            primaryColorInput.dispatchEvent(new Event('input', { bubbles: true }));
             const primarySwatch = primaryColorInput.closest('.color-input-row')?.querySelector('.color-swatch');
             if (primarySwatch) primarySwatch.style.backgroundColor = colors.headerStart;
         }
@@ -2110,12 +2166,14 @@
         const headerEndInput = document.querySelector('input[name="header_gradient_end"]');
         if (headerEndInput && colors.headerEnd) {
             headerEndInput.value = colors.headerEnd;
+            headerEndInput.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
         // Update CTA button color
         const ctaColorInput = document.querySelector('input[name="cta_button_color"]');
         if (ctaColorInput && colors.btnColor) {
             ctaColorInput.value = colors.btnColor;
+            ctaColorInput.dispatchEvent(new Event('input', { bubbles: true }));
             const ctaSwatch = ctaColorInput.closest('.cta-color-input')?.querySelector('.cta-color-swatch');
             if (ctaSwatch) ctaSwatch.style.backgroundColor = colors.btnColor;
             const ctaPicker = ctaSwatch?.querySelector('input[type="color"]');
@@ -2126,6 +2184,7 @@
         const ctaTextColorInput = document.querySelector('input[name="cta_button_text_color"]');
         if (ctaTextColorInput && colors.textColor) {
             ctaTextColorInput.value = colors.textColor;
+            ctaTextColorInput.dispatchEvent(new Event('input', { bubbles: true }));
             const ctaTextSwatch = ctaTextColorInput.closest('.cta-color-input')?.querySelector('.cta-color-swatch');
             if (ctaTextSwatch) ctaTextSwatch.style.backgroundColor = colors.textColor;
             const ctaTextPicker = ctaTextSwatch?.querySelector('input[type="color"]');
@@ -2150,7 +2209,10 @@
         if (preview) preview.remove();
 
         const bannerValue = document.getElementById('banner-value');
-        if (bannerValue) bannerValue.value = '';
+        if (bannerValue) {
+            bannerValue.value = '';
+            bannerValue.dispatchEvent(new Event('change', { bubbles: true }));
+        }
 
         // Remove remove button
         const removeBtn = container.querySelector('.upload-btn-remove');
@@ -2162,9 +2224,10 @@
 
         // Update banner_remove to 1
         const removeInput = document.getElementById('banner-remove');
-        removeInput.value = '1';
-
-        savePreview();
+        if (removeInput) {
+            removeInput.value = '1';
+            removeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
     }
 
     // Remove profile
@@ -2183,7 +2246,10 @@
         if (preview) preview.remove();
 
         const profileValue = document.getElementById('profile-value');
-        if (profileValue) profileValue.value = '';
+        if (profileValue) {
+            profileValue.value = '';
+            profileValue.dispatchEvent(new Event('change', { bubbles: true }));
+        }
 
         // Remove remove button
         const removeBtn = container.querySelector('.profile-btn-remove');
@@ -2195,53 +2261,70 @@
 
         // Update profile_remove to 1
         const removeInput = document.getElementById('profile-remove');
-        removeInput.value = '1';
-
-        savePreview();
+        if (removeInput) {
+            removeInput.value = '1';
+            removeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
     }
 
-    // Color updates
+    // Color updates - savePreview is triggered by form input listeners
     function updatePrimaryColor(el) {
         el.closest('.color-swatch').style.backgroundColor = el.value;
-        el.closest('.color-input-row').querySelector('input[type="text"]').value = el.value;
-        savePreview();
+        const textInput = el.closest('.color-input-row').querySelector('input[type="text"]');
+        if (textInput) {
+            textInput.value = el.value;
+            textInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
     }
     function syncColorSwatch(el) {
         const swatch = el.closest('.color-input-row').querySelector('.color-swatch');
-        swatch.style.backgroundColor = el.value;
-        savePreview();
+        if (swatch) swatch.style.backgroundColor = el.value;
+        // savePreview() triggered by form input listener
     }
     function updateBgColor(el) {
         el.closest('.color-swatch').style.backgroundColor = el.value;
-        el.closest('.color-input-row').querySelector('input[type="text"]').value = el.value;
+        const textInput = el.closest('.color-input-row').querySelector('input[type="text"]');
+        if (textInput) {
+            textInput.value = el.value;
+            textInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
         const bgGradientEndInput = document.querySelector('input[name="background_gradient_end"]');
-        if (bgGradientEndInput) bgGradientEndInput.value = el.value;
-        savePreview();
+        if (bgGradientEndInput) {
+            bgGradientEndInput.value = el.value;
+            bgGradientEndInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
     }
     function syncBgColorSwatch(el) {
         const swatch = el.closest('.color-input-row').querySelector('.color-swatch');
-        swatch.style.backgroundColor = el.value;
+        if (swatch) swatch.style.backgroundColor = el.value;
         const bgGradientEndInput = document.querySelector('input[name="background_gradient_end"]');
-        if (bgGradientEndInput) bgGradientEndInput.value = el.value;
-        savePreview();
+        if (bgGradientEndInput) {
+            bgGradientEndInput.value = el.value;
+            bgGradientEndInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        // savePreview() triggered by form input listener
     }
     function updateCtaColor(el) {
         const wrapper = el.closest('.cta-color-input');
         const textInput = wrapper?.querySelector('input[name="cta_button_color"]');
 
-        if (textInput) textInput.value = el.value;
+        if (textInput) {
+            textInput.value = el.value;
+            textInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
         el.closest('.cta-color-swatch').style.backgroundColor = el.value;
         refreshCtaSamples();
-        savePreview();
     }
     function updateCtaTextColor(el) {
         const wrapper = el.closest('.cta-color-input');
         const textInput = wrapper?.querySelector('input[name="cta_button_text_color"]');
 
-        if (textInput) textInput.value = el.value;
+        if (textInput) {
+            textInput.value = el.value;
+            textInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
         el.closest('.cta-color-swatch').style.backgroundColor = el.value;
         refreshCtaSamples();
-        savePreview();
     }
 
     function syncCtaColorText(el) {
@@ -2254,7 +2337,7 @@
         if (swatch) swatch.style.backgroundColor = el.value;
         if (picker) picker.value = el.value;
         refreshCtaSamples();
-        savePreview();
+        // savePreview() triggered by form input listener
     }
 
     function syncCtaTextColorText(el) {
@@ -2267,7 +2350,7 @@
         if (swatch) swatch.style.backgroundColor = el.value;
         if (picker) picker.value = el.value;
         refreshCtaSamples();
-        savePreview();
+        // savePreview() triggered by form input listener
     }
 
     function isValidHexColor(value) {
@@ -2296,11 +2379,15 @@
         if (!file) return;
 
         const removeInput = document.getElementById('background-remove');
-        if (removeInput) removeInput.value = '0';
+        if (removeInput) {
+            removeInput.value = '0';
+            removeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
 
         const imageRadio = document.querySelector('input[name="background_type"][value="image"]');
         if (imageRadio) {
             imageRadio.checked = true;
+            imageRadio.dispatchEvent(new Event('change', { bubbles: true }));
             document.querySelectorAll('input[name="background_type"]').forEach(i => {
                 i.closest('.bg-type-card')?.classList.remove('selected');
             });
@@ -2310,7 +2397,10 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             const backgroundValue = document.getElementById('background-image-value');
-            if (backgroundValue) backgroundValue.value = e.target.result;
+            if (backgroundValue) {
+                backgroundValue.value = e.target.result;
+                backgroundValue.dispatchEvent(new Event('change', { bubbles: true }));
+            }
 
             const preview = document.getElementById('background-image-preview');
             if (preview) {
@@ -2331,8 +2421,6 @@
                 removeBtn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>';
                 imageCard.appendChild(removeBtn);
             }
-
-            savePreview();
         };
         reader.readAsDataURL(file);
     }
@@ -2344,10 +2432,16 @@
         window._backgroundFile = null;
 
         const backgroundValue = document.getElementById('background-image-value');
-        if (backgroundValue) backgroundValue.value = '';
+        if (backgroundValue) {
+            backgroundValue.value = '';
+            backgroundValue.dispatchEvent(new Event('change', { bubbles: true }));
+        }
 
         const removeInput = document.getElementById('background-remove');
-        if (removeInput) removeInput.value = '1';
+        if (removeInput) {
+            removeInput.value = '1';
+            removeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
 
         const fileInput = document.getElementById('background-image-input');
         if (fileInput) fileInput.value = '';
@@ -2363,6 +2457,7 @@
         const flatRadio = document.querySelector('input[name="background_type"][value="flat"]');
         if (flatRadio) {
             flatRadio.checked = true;
+            flatRadio.dispatchEvent(new Event('change', { bubbles: true }));
             document.querySelectorAll('input[name="background_type"]').forEach(i => {
                 i.closest('.bg-type-card')?.classList.remove('selected');
             });
@@ -2371,8 +2466,6 @@
 
         const removeButton = event.currentTarget;
         if (removeButton) removeButton.remove();
-
-        savePreview();
     }
 
     // Banner upload
@@ -2411,12 +2504,16 @@
                 }
 
                 const bannerValue = document.getElementById('banner-value');
-                if (bannerValue) bannerValue.value = e.target.result;
+                if (bannerValue) {
+                    bannerValue.value = e.target.result;
+                    bannerValue.dispatchEvent(new Event('change', { bubbles: true }));
+                }
 
                 const removeInput = document.getElementById('banner-remove');
-                if (removeInput) removeInput.value = '0';
-
-                savePreview();
+                if (removeInput) {
+                    removeInput.value = '0';
+                    removeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -2459,12 +2556,16 @@
                 }
 
                 const profileValue = document.getElementById('profile-value');
-                if (profileValue) profileValue.value = e.target.result;
+                if (profileValue) {
+                    profileValue.value = e.target.result;
+                    profileValue.dispatchEvent(new Event('change', { bubbles: true }));
+                }
 
                 const removeInput = document.getElementById('profile-remove');
-                if (removeInput) removeInput.value = '0';
-
-                savePreview();
+                if (removeInput) {
+                    removeInput.value = '0';
+                    removeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -2527,6 +2628,7 @@
         const hiddenInput = document.querySelector(`input[name="social_${currentSocialPlatform}"]`);
         if (hiddenInput) {
             hiddenInput.value = value;
+            hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
         }
 
         // Update pill visual state
@@ -2540,7 +2642,6 @@
         }
 
         closeSocialModal();
-        savePreview();
     }
 
     function removeSocialLink(event, platform) {
@@ -2561,8 +2662,7 @@
         if (currentSocialPlatform === platform) {
             closeSocialModal();
         }
-
-        savePreview();
+        // savePreview() triggered by the change event dispatched above
     }
 
     // Listen to all form inputs for live preview
@@ -2584,7 +2684,7 @@
                 i.closest('.visual-card, .style-card, .font-card, .template-card, .bg-type-card')?.classList.remove('selected');
             });
             this.closest('.visual-card, .style-card, .font-card, .template-card, .bg-type-card')?.classList.add('selected');
-            savePreview();
+            // savePreview() is already triggered by the input's change event listener above
         });
     });
 
