@@ -19,14 +19,20 @@ class Product extends Model
     protected $fillable = [
         'store_id',
         'name',
+        'emoji',
         'description',
         'price',
         'image',
+        'thumbnail',
         'product_type',
+        'display_style',
+        'button_color',
         'cta_type',
         'cta_url',
         'digital_file',
+        'link_group_id',
         'is_active',
+        'click_count',
         'sort_order',
     ];
 
@@ -47,6 +53,46 @@ class Product extends Model
     public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class);
+    }
+
+    /**
+     * Get the link group that this product belongs to.
+     */
+    public function linkGroup(): BelongsTo
+    {
+        return $this->belongsTo(LinkGroup::class, 'link_group_id');
+    }
+
+    /**
+     * Get the clicks for this product.
+     */
+    public function clicks(): HasMany
+    {
+        return $this->hasMany(LinkClick::class);
+    }
+
+    /**
+     * Get click breakdown by type.
+     */
+    public function getClickBreakdownAttribute(): array
+    {
+        return LinkClick::getCountsByType($this->id);
+    }
+
+    /**
+     * Get total click count (from clicks table).
+     */
+    public function getTotalClicksAttribute(): int
+    {
+        return LinkClick::getTotalClicks($this->id);
+    }
+
+    /**
+     * Increment the click count.
+     */
+    public function incrementClickCount(): void
+    {
+        $this->increment('click_count');
     }
 
     /**
@@ -185,5 +231,62 @@ class Product extends Model
             'external' => 'M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14',
             default => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
         };
+    }
+
+    /**
+     * Get display name with emoji prefix.
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->emoji ? $this->emoji . ' ' . $this->name : $this->name;
+    }
+
+    /**
+     * Get the effective image (thumbnail or image).
+     */
+    public function getEffectiveImageAttribute(): ?string
+    {
+        return $this->thumbnail ?: $this->image;
+    }
+
+    /**
+     * Get display style classes.
+     */
+    public function getDisplayStyleClassesAttribute(): string
+    {
+        return match ($this->display_style) {
+            'card' => 'rounded-2xl shadow-sm border border-gray-100 overflow-hidden',
+            'button' => 'rounded-xl border-2 border-gray-200',
+            'list' => 'rounded-lg border-b border-gray-100 last:border-b-0',
+            default => 'rounded-2xl shadow-sm border border-gray-100 overflow-hidden',
+        };
+    }
+
+    /**
+     * Get button color classes based on custom color or default.
+     */
+    public function getCustomButtonColorClassesAttribute(): string
+    {
+        if ($this->button_color) {
+            // Generate button classes from custom hex color
+            return "text-white hover:opacity-90";
+        }
+
+        // Default colors based on CTA type
+        return $this->ctaButtonColorClasses;
+    }
+
+    /**
+     * Get inline style for custom button color.
+     */
+    public function getButtonInlineStyleAttribute(): ?string
+    {
+        if (!$this->button_color) {
+            return null;
+        }
+
+        // Darken the color slightly for hover state
+        $color = ltrim($this->button_color, '#');
+        return "background-color: {$this->button_color};";
     }
 }

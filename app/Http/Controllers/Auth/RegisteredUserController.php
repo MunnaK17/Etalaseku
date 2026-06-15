@@ -34,6 +34,9 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'agree' => ['accepted'],
+        ], [
+            'agree.accepted' => 'Kamu harus menyetujui Syarat & Ketentuan dan Kebijakan Privasi.',
         ]);
 
         $user = User::create([

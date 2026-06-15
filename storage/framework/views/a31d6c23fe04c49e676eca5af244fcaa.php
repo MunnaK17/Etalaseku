@@ -167,7 +167,7 @@ unset($__errorArgs, $__bag); ?>
                 <!-- Email -->
                 <div>
                     <label for="customer_email" class="block text-sm font-medium text-gray-700 mb-1.5">
-                        Email <span class="text-red-500" aria-hidden="true">*</span>
+                        Email <span class="text-red-500" aria-hidden="true">*</span> <span class="text-gray-500">(wajib)</span>
                     </label>
                     <input type="email" id="customer_email" name="customer_email" required
                            value="<?php echo e(old('customer_email')); ?>"
@@ -182,6 +182,7 @@ if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>"
                            placeholder="email@contoh.com">
+                    <p class="mt-1 text-xs text-gray-500">Detail pesanan akan dikirim ke email ini.</p>
                     <?php $__errorArgs = ['customer_email'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -197,10 +198,11 @@ unset($__errorArgs, $__bag); ?>
                 <!-- Phone -->
                 <div>
                     <label for="customer_phone" class="block text-sm font-medium text-gray-700 mb-1.5">
-                        No. WhatsApp <span class="text-gray-400">(opsional)</span>
+                        No. WhatsApp <span class="text-red-500" aria-hidden="true">*</span> <span class="text-gray-500">(wajib)</span>
                     </label>
-                    <input type="tel" id="customer_phone" name="customer_phone"
+                    <input type="tel" id="customer_phone" name="customer_phone" required
                            value="<?php echo e(old('customer_phone')); ?>"
+                           aria-required="true"
                            aria-describedby="<?php echo e($errors->has('customer_phone') ? 'customer_phone-error' : ''); ?>"
                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition <?php $__errorArgs = ['customer_phone'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -230,8 +232,8 @@ unset($__errorArgs, $__bag); ?>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <div>
-                            <p class="text-sm text-blue-800 font-medium">Pesanan akan diproses via WhatsApp</p>
-                            <p class="text-xs text-blue-600 mt-1">Penjual akan menghubungi Anda untuk konfirmasi pembayaran.</p>
+                            <p class="text-sm text-blue-800 font-medium">Pesanan akan dikirim via email</p>
+                            <p class="text-xs text-blue-600 mt-1">Pastikan email dan WhatsApp aktif untuk menerima detail pesanan dan konfirmasi pembayaran.</p>
                         </div>
                     </div>
                 </div>

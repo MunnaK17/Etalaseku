@@ -108,42 +108,6 @@
             </div>
         </div>
 
-        <!-- Update Status -->
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Update Status</h2>
-            </div>
-            <div class="p-6">
-                <form action="{{ route('seller.orders.update-status', $order->id) }}" method="POST" class="flex flex-wrap gap-4">
-                    @csrf
-                    @method('PATCH')
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Pembayaran</label>
-                        <select name="payment_status" class="rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="pending" {{ $order->payment_status === 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="paid" {{ $order->payment_status === 'paid' ? 'selected' : '' }}>Lunas</option>
-                            <option value="failed" {{ $order->payment_status === 'failed' ? 'selected' : '' }}>Gagal</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Pesanan</label>
-                        <select name="order_status" class="rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="new" {{ $order->order_status === 'new' ? 'selected' : '' }}>Baru</option>
-                            <option value="completed" {{ $order->order_status === 'completed' ? 'selected' : '' }}>Selesai</option>
-                        </select>
-                    </div>
-                    <div class="flex items-end">
-                        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition">
-                            Update
-                        </button>
-                    </div>
-                </form>
-
-                @if(session('success'))
-                    <p class="mt-3 text-sm text-green-600">{{ session('success') }}</p>
-                @endif
-            </div>
-        </div>
     </div>
 </div>
 @endsection

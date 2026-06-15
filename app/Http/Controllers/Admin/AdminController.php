@@ -3,15 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\InclusiveApplicationApproved;
+use App\Mail\InclusiveApplicationRejected;
 use App\Models\InclusiveApplication;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Store;
 use App\Models\User;
-use App\Notifications\InclusiveApprovedNotification;
-use App\Notifications\InclusiveRejectedNotification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
@@ -37,7 +39,7 @@ class AdminController extends Controller
             ->get();
 
         // Recent applications
-        $recentApplications = InclusiveApplication::with('store')
+        $recentApplications = InclusiveApplication::with(['store', 'user'])
             ->where('status', 'pending')
             ->orderBy('created_at', 'asc')
             ->limit(5)
@@ -87,10 +89,15 @@ class AdminController extends Controller
     /**
      * List inclusive applications.
      */
-    public function inclusiveApplications()
+    public function inclusiveApplications(Request $request)
     {
-        $applications = InclusiveApplication::with('store')
-            ->orderByRaw("FIELD(status, 'pending', 'approved', 'rejected')")
+        $query = InclusiveApplication::with(['user', 'store']);
+
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $applications = $query->orderByRaw("FIELD(status, 'pending', 'approved', 'rejected')")
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
@@ -104,7 +111,7 @@ class AdminController extends Controller
      */
     public function showApplication(InclusiveApplication $application)
     {
-        $application->load('store');
+        $application->load(['user', 'store']);
 
         return view('admin.inclusive-applications.show', [
             'application' => $application,
@@ -112,7 +119,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Approve an application.
+     * Approve an application - creates user account and store automatically.
      */
     public function approveApplication(Request $request, InclusiveApplication $application)
     {
@@ -121,28 +128,86 @@ class AdminController extends Controller
                 ->with('error', 'Permohonan sudah diproses.');
         }
 
-        $application->update([
-            'status' => InclusiveApplication::STATUS_APPROVED,
-            'admin_notes' => $request->admin_notes,
-            'reviewed_at' => now(),
-            'reviewed_by' => auth()->id(),
-        ]);
+        try {
+            // Generate random password
+            $tempPassword = Str::random(12);
 
-        // Update store to inclusive seller with Pro plan (6 months)
-        $application->store->update([
-            'is_inclusive_seller' => true,
-            'plan' => 'pro',
-            'plan_expires_at' => now()->addMonths(6),
-        ]);
+            // Create user account
+            $user = User::create([
+                'name' => $application->applicant_name,
+                'email' => $application->email,
+                'password' => Hash::make($tempPassword),
+                'role' => 'user',
+            ]);
 
-        // Send approval notification
-        if ($application->store->user) {
-            Notification::send($application->store->user, new InclusiveApprovedNotification());
+            // Generate store slug from name
+            $storeSlug = Str::slug($application->applicant_name);
+            // Make it unique
+            $originalSlug = $storeSlug;
+            $counter = 1;
+            while (Store::where('username', $storeSlug)->exists()) {
+                $storeSlug = $originalSlug . '-' . $counter;
+                $counter++;
+            }
+
+            // Create store
+            $store = Store::create([
+                'user_id' => $user->id,
+                'name' => $application->applicant_name . ' Store',
+                'username' => $storeSlug,
+                'description' => 'Toko Inclusive Seller',
+                'is_active' => true,
+                'is_inclusive_seller' => true,
+                'plan' => 'pro',
+                'plan_expires_at' => now()->addMonths(6),
+            ]);
+
+            // Update application
+            $application->update([
+                'status' => InclusiveApplication::STATUS_APPROVED,
+                'admin_notes' => $request->admin_notes,
+                'reviewed_at' => now(),
+                'reviewed_by' => auth()->id(),
+                'user_id' => $user->id,
+                'store_id' => $store->id,
+                'temp_password' => $tempPassword,
+            ]);
+
+            $emailSent = true;
+
+            // Send email notification
+            try {
+                \Mail::to($application->email)->send(new InclusiveApplicationApproved($application, $tempPassword));
+            } catch (\Exception $e) {
+                $emailSent = false;
+
+                Log::error('Failed to send approval email', [
+                    'application_id' => $application->id,
+                    'email' => $application->email,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            $message = "Permohonan berhasil disetujui! User account dan store '{$store->name}' telah dibuat.";
+
+            if (!$emailSent) {
+                $message .= ' Namun email notifikasi gagal dikirim. Cek konfigurasi email dan log aplikasi.';
+            }
+
+            return redirect()
+                ->route('admin.inclusive-applications.index')
+                ->with($emailSent ? 'success' : 'warning', $message);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to approve inclusive application', [
+                'application_id' => $application->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->with('error', 'Terjadi kesalahan saat memproses permohonan.');
         }
-
-        return redirect()
-            ->route('admin.inclusive-applications.index')
-            ->with('success', 'Permohonan berhasil disetujui! Store sekarang menjadi Inclusive Seller (Pro 6 bulan).');
     }
 
     /**
@@ -158,17 +223,24 @@ class AdminController extends Controller
         $application->update([
             'status' => InclusiveApplication::STATUS_REJECTED,
             'admin_notes' => $request->admin_notes,
+            'rejection_reason' => $request->rejection_reason,
             'reviewed_at' => now(),
             'reviewed_by' => auth()->id(),
         ]);
 
-        // Send rejection notification
-        if ($application->store && $application->store->user) {
-            Notification::send($application->store->user, new InclusiveRejectedNotification());
+        // Send rejection email notification
+        try {
+            \Mail::to($application->email)->send(new InclusiveApplicationRejected($application));
+        } catch (\Exception $e) {
+            Log::error('Failed to send rejection email', [
+                'application_id' => $application->id,
+                'email' => $application->email,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         return redirect()
             ->route('admin.inclusive-applications.index')
-            ->with('success', 'Permohonan ditolak.');
+            ->with('success', 'Permohonan ditolak. Email notifikasi telah dikirim.');
     }
 }

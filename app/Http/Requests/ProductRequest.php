@@ -23,14 +23,19 @@ class ProductRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:100'],
+            'emoji' => ['nullable', 'string', 'max:10'],
             'description' => ['nullable', 'string', 'max:1000'],
             'price' => ['nullable', 'integer', 'min:0'],
             'image' => ['nullable', 'string', 'max:255'],
+            'thumbnail' => ['nullable', 'string', 'max:255'],
             'product_type' => ['required', 'in:physical,service,digital,custom,external'],
+            'display_style' => ['nullable', 'in:card,button,list'],
+            'button_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'cta_type' => ['required', 'in:whatsapp,checkout,download,external_link'],
             'cta_url' => ['nullable', 'url', 'max:500'],
             'is_active' => ['boolean'],
             'sort_order' => ['integer', 'min:0'],
+            'link_group_id' => ['nullable', 'integer', 'exists:link_groups,id'],
         ];
     }
 

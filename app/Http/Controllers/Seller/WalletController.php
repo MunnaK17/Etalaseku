@@ -70,6 +70,7 @@ class WalletController extends Controller
 
         return view('wallet.withdraw', [
             'wallet' => $wallet,
+            'store' => $store,
             'availableBalance' => $availableBalance,
         ]);
     }

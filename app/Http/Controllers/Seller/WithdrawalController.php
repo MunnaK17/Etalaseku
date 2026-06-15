@@ -25,12 +25,16 @@ class WithdrawalController extends Controller
 
         $request->validate([
             'amount' => 'required|integer|min:10000',
-            'bank_name' => 'required|string|max:255',
-            'account_number' => 'required|string|max:50',
-            'account_name' => 'required|string|max:255',
         ], [
             'amount.min' => 'Minimum penarikan adalah Rp 10.000',
         ]);
+
+        if (!$store->payout_bank_name || !$store->payout_account_number || !$store->payout_account_name) {
+            return redirect()
+                ->route('seller.store.edit')
+                ->with('error', 'Lengkapi Payout Settings terlebih dahulu sebelum mengajukan penarikan.')
+                ->with('open_payout_modal', true);
+        }
 
         // Get wallet - always from authenticated user
         $wallet = Wallet::where('user_id', $user->id)->first();
@@ -56,11 +60,11 @@ class WithdrawalController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($request, $user, $wallet) {
+            DB::transaction(function () use ($request, $store, $wallet) {
                 // Debit wallet
                 $wallet->debit(
                     $request->amount,
-                    'Permintaan penarikan ke ' . $request->bank_name . ' (' . $request->account_number . ')',
+                    'Permintaan penarikan ke ' . $store->payout_bank_name . ' (' . $store->payout_account_number . ')',
                     null
                 );
 
@@ -68,9 +72,9 @@ class WithdrawalController extends Controller
                 Withdrawal::create([
                     'wallet_id' => $wallet->id,
                     'amount' => $request->amount,
-                    'bank_name' => $request->bank_name,
-                    'account_number' => $request->account_number,
-                    'account_name' => $request->account_name,
+                    'bank_name' => $store->payout_bank_name,
+                    'account_number' => $store->payout_account_number,
+                    'account_name' => $store->payout_account_name,
                     'status' => 'pending',
                 ]);
             });

@@ -53,7 +53,13 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        $adminEmails = [
+            'admin@etalaseku.test',
+            'admin@etalaseku.com',
+        ];
+
+        return $this->role === 'admin'
+            || in_array(strtolower($this->email), array_map('strtolower', $adminEmails), true);
     }
 
     /**
@@ -86,5 +92,13 @@ class User extends Authenticatable
     public function wallet(): HasOne
     {
         return $this->hasOne(Wallet::class);
+    }
+
+    /**
+     * Get the pages for the user.
+     */
+    public function pages(): HasMany
+    {
+        return $this->hasMany(Page::class)->orderBy('sort_order');
     }
 }

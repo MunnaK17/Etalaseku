@@ -55,3 +55,139 @@
         @apply w-full max-w-md bg-surface-container border border-border-dark rounded-2xl p-8 shadow-2xl;
     }
 }
+
+/* ============================================
+   STORE SHOWCASE CAROUSEL
+   ============================================ */
+
+.store-carousel-wrapper {
+    position: relative;
+}
+
+.store-carousel {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 4px 16px;
+    margin: 0 -4px;
+
+    /* Hide scrollbar but keep functionality */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE/Edge */
+}
+
+.store-carousel::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Opera */
+}
+
+.store-carousel .store-preview-card {
+    scroll-snap-align: start;
+}
+
+/* Navigation Arrows */
+.carousel-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-primary);
+}
+
+.carousel-nav-btn:hover {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+}
+
+.carousel-nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.carousel-nav-btn.prev {
+    left: -20px;
+}
+
+.carousel-nav-btn.next {
+    right: -20px;
+}
+
+@media (max-width: 768px) {
+    .carousel-nav-btn {
+        display: none;
+    }
+}
+
+/* Mobile Scroll Hint */
+.carousel-scroll-hint {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    color: var(--text-muted);
+}
+
+.carousel-scroll-hint svg {
+    animation: pulse-left-right 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-left-right {
+    0%, 100% {
+        transform: translateX(0);
+        opacity: 0.5;
+    }
+    50% {
+        transform: translateX(8px);
+        opacity: 1;
+    }
+}
+
+@media (min-width: 769px) {
+    .carousel-scroll-hint {
+        display: none;
+    }
+}
+
+/* Carousel gradient fade edges */
+.store-carousel-wrapper::before,
+.store-carousel-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 60px;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.store-carousel-wrapper::before {
+    left: 0;
+    background: linear-gradient(to right, var(--bg-secondary), transparent);
+}
+
+.store-carousel-wrapper::after {
+    right: 0;
+    background: linear-gradient(to left, var(--bg-secondary), transparent);
+}
+
+@media (max-width: 768px) {
+    .store-carousel-wrapper::before,
+    .store-carousel-wrapper::after {
+        display: none;
+    }
+}

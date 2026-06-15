@@ -15,9 +15,6 @@
                     <x-nav-link :href="route('seller.dashboard')" :active="request()->routeIs('seller.dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('seller.products.index')" :active="request()->routeIs('seller.products.*')">
-                        {{ __('Produk') }}
-                    </x-nav-link>
                     <x-nav-link :href="route('seller.store.edit')" :active="request()->routeIs('seller.store.*')">
                         {{ __('Pengaturan') }}
                     </x-nav-link>
@@ -86,9 +83,6 @@
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('seller.dashboard')" :active="request()->routeIs('seller.dashboard')">
                 {{ __('Dashboard') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('seller.products.index')" :active="request()->routeIs('seller.products.*')">
-                {{ __('Produk') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('seller.store.edit')" :active="request()->routeIs('seller.store.*')">
                 {{ __('Pengaturan') }}

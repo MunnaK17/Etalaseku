@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('inclusive_applications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('store_id')->constrained()->onDelete('cascade');
+            $table->foreignId('store_id')->nullable()->constrained()->onDelete('set null');
             $table->string('disability_type');
             $table->string('disability_certificate')->nullable();
             $table->text('reason');

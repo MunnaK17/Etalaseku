@@ -87,8 +87,11 @@ class AdminOrderController extends Controller
                     $order->id
                 );
 
-                // Update order status to paid
-                $order->update(['payment_status' => 'paid']);
+                // Mark payment as paid and close the order from the seller side.
+                $order->update([
+                    'payment_status' => 'paid',
+                    'order_status' => 'completed',
+                ]);
 
                 // Log the platform fee
                 \Log::info('Order approved - wallet credited', [

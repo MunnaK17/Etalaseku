@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Store;
 use App\Services\MidtransService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class CheckoutController extends Controller
@@ -24,7 +25,13 @@ class CheckoutController extends Controller
      */
     public function show(Product $product)
     {
+        // Load store relationship
         $store = $product->store;
+
+        // Check if store exists
+        if (!$store) {
+            abort(404, 'Toko tidak ditemukan.');
+        }
 
         // Only allow checkout for Pro stores
         if (!$store->canUseCheckout()) {
@@ -34,7 +41,14 @@ class CheckoutController extends Controller
 
         // Only allow checkout for products with price
         if (!$product->price || $product->price <= 0) {
-            return redirect()->route('public.store', $store->username);
+            return redirect()->route('public.store', $store->username)
+                ->with('error', 'Produk ini tidak tersedia untuk checkout.');
+        }
+
+        // Check if product is active
+        if (!$product->is_active) {
+            return redirect()->route('public.store', $store->username)
+                ->with('error', 'Produk ini tidak tersedia.');
         }
 
         return view('checkout.show', [
@@ -50,11 +64,30 @@ class CheckoutController extends Controller
     {
         $store = $product->store;
 
+        // Check if store exists
+        if (!$store) {
+            abort(404, 'Toko tidak ditemukan.');
+        }
+
+        // Only allow checkout for Pro stores
+        if (!$store->canUseCheckout()) {
+            return redirect()->route('public.store', $store->username)
+                ->with('error', 'Fitur Checkout hanya tersedia untuk Plan Pro.');
+        }
+
+        // Only allow checkout for products with price
+        if (!$product->price || $product->price <= 0) {
+            return redirect()->route('public.store', $store->username)
+                ->with('error', 'Produk ini tidak tersedia untuk checkout.');
+        }
+
         // Validate checkout input
         $validator = Validator::make($request->all(), [
             'customer_name' => 'required|string|max:255',
             'customer_email' => 'required|email|max:255',
-            'customer_phone' => 'nullable|string|max:20',
+            'customer_phone' => 'required|string|max:20',
+        ], [
+            'customer_phone.required' => 'Nomor WhatsApp wajib diisi.',
         ]);
 
         if ($validator->fails()) {
@@ -63,29 +96,36 @@ class CheckoutController extends Controller
                 ->withInput();
         }
 
-        // Create the order
-        $order = Order::create([
-            'store_id' => $store->id,
-            'product_id' => $product->id,
-            'customer_name' => $request->customer_name,
-            'customer_email' => $request->customer_email,
-            'customer_phone' => $request->customer_phone,
-            'amount' => $product->price,
-            'payment_status' => 'pending',
-            'order_status' => 'new',
-            'order_number' => Order::generateOrderNumber(),
-        ]);
+        try {
+            // Create the order
+            $order = Order::create([
+                'store_id' => $store->id,
+                'product_id' => $product->id,
+                'customer_name' => $request->customer_name,
+                'customer_email' => $request->customer_email,
+                'customer_phone' => $request->customer_phone,
+                'amount' => $product->price,
+                'payment_status' => 'pending',
+                'order_status' => 'new',
+                'order_number' => Order::generateOrderNumber(),
+            ]);
 
-        // Track checkout event
-        $product->store->analytics()->create([
-            'product_id' => $product->id,
-            'event_type' => 'checkout_click',
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+            // Track checkout event
+            $product->store->analytics()->create([
+                'product_id' => $product->id,
+                'event_type' => 'checkout_click',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
 
-        // Redirect to payment page with Midtrans Snap
-        return redirect()->route('checkout.payment', $order->order_number);
+            // Redirect to payment page with Midtrans Snap
+            return redirect()->route('checkout.payment', $order->order_number);
+        } catch (\Exception $e) {
+            \Log::error('Checkout process error: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat memproses pesanan. Silakan coba lagi.')
+                ->withInput();
+        }
     }
 
     /**
@@ -95,7 +135,12 @@ class CheckoutController extends Controller
     {
         $order = Order::where('order_number', $orderNumber)
             ->with(['product', 'store'])
-            ->firstOrFail();
+            ->first();
+
+        if (!$order) {
+            Log::warning('Order not found for payment', ['orderNumber' => $orderNumber]);
+            abort(404, 'Pesanan tidak ditemukan.');
+        }
 
         // Check if Midtrans is configured
         $midtransConfigured = !empty(config('midtrans.client_key')) && !empty(config('midtrans.server_key'));
@@ -112,6 +157,10 @@ class CheckoutController extends Controller
                     'clientKey' => config('midtrans.client_key'),
                 ]);
             } catch (\Exception $e) {
+                Log::error('Midtrans payment error', [
+                    'orderNumber' => $orderNumber,
+                    'error' => $e->getMessage()
+                ]);
                 // If Midtrans fails, show manual payment info
                 return view('checkout.payment', [
                     'order' => $order,
@@ -153,7 +202,12 @@ class CheckoutController extends Controller
     {
         $order = Order::where('order_number', $orderNumber)
             ->with(['product', 'store'])
-            ->firstOrFail();
+            ->first();
+
+        if (!$order) {
+            Log::warning('Order not found for success page', ['orderNumber' => $orderNumber]);
+            abort(404, 'Pesanan tidak ditemukan.');
+        }
 
         return view('checkout.success', [
             'order' => $order,
@@ -169,13 +223,20 @@ class CheckoutController extends Controller
         $store = $user->store;
 
         if (!$store) {
-            return redirect()->route('seller.onboarding');
+            return redirect()->route('seller.onboarding')
+                ->with('error', 'Anda perlu membuat toko terlebih dahulu.');
         }
 
-        $orders = Order::where('store_id', $store->id)
-            ->with('product')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        try {
+            $orders = Order::where('store_id', $store->id)
+                ->with('product')
+                ->orderBy('created_at', 'desc')
+                ->paginate(20);
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Log::error('Error loading orders: ' . $e->getMessage());
+            $orders = collect(); // Empty collection as fallback
+        }
 
         return view('seller.orders.index', [
             'orders' => $orders,
@@ -190,8 +251,13 @@ class CheckoutController extends Controller
     {
         $user = auth()->user();
 
+        if (!$user->store) {
+            return redirect()->route('seller.onboarding')
+                ->with('error', 'Anda perlu membuat toko terlebih dahulu.');
+        }
+
         if ($order->store_id !== $user->store->id) {
-            abort(403);
+            abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
         }
 
         return view('seller.orders.show', [
@@ -199,32 +265,4 @@ class CheckoutController extends Controller
         ]);
     }
 
-    /**
-     * Update order status.
-     */
-    public function updateStatus(Request $request, Order $order)
-    {
-        $user = auth()->user();
-
-        if ($order->store_id !== $user->store->id) {
-            abort(403);
-        }
-
-        $request->validate([
-            'payment_status' => 'nullable|in:pending,paid,failed',
-            'order_status' => 'nullable|in:new,completed',
-        ]);
-
-        if ($request->payment_status) {
-            $order->payment_status = $request->payment_status;
-        }
-
-        if ($request->order_status) {
-            $order->order_status = $request->order_status;
-        }
-
-        $order->save();
-
-        return redirect()->back()->with('success', 'Status pesanan berhasil diperbarui.');
-    }
 }

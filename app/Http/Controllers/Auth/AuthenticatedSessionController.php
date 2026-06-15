@@ -30,6 +30,11 @@ class AuthenticatedSessionController extends Controller
 
         // Check if user has a store, redirect to onboarding if not
         $user = $request->user();
+
+        if ($user && $user->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
         if ($user && !$user->hasStore()) {
             return redirect()->route('seller.onboarding');
         }

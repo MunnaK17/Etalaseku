@@ -17,21 +17,32 @@ class StoreController extends Controller
     public function edit(Request $request): View
     {
         $store = $request->user()->store;
+        $layouts = Store::getLayouts();
+        $fonts = Store::getAvailableFonts();
+        $templatePresets = Store::getTemplatePresets();
 
-        return view('seller.store.edit', compact('store'));
+        return view('seller.store.edit', compact(
+            'store',
+            'layouts',
+            'fonts',
+            'templatePresets'
+        ));
     }
 
     /**
      * Update the store settings.
      */
-    public function update(StoreRequest $request, Store $store): RedirectResponse
+    public function update(StoreRequest $request): RedirectResponse
     {
-        // Ensure user owns this store
-        if ($store->user_id !== $request->user()->id) {
-            abort(403);
+        $store = $request->user()->store;
+
+        if (!$store) {
+            return redirect()->route('seller.onboarding');
         }
 
-        $store->update($request->validated());
+        // Update with PRO restrictions applied
+        $validated = $request->validatedWithProRestrictions($store);
+        $store->update($validated);
 
         return redirect()
             ->route('seller.store.edit')
@@ -41,10 +52,12 @@ class StoreController extends Controller
     /**
      * Toggle store active status.
      */
-    public function toggleActive(Request $request, Store $store): RedirectResponse
+    public function toggleActive(Request $request): RedirectResponse
     {
-        if ($store->user_id !== $request->user()->id) {
-            abort(403);
+        $store = $request->user()->store;
+
+        if (!$store) {
+            return redirect()->route('seller.onboarding');
         }
 
         $store->update(['is_active' => !$store->is_active]);

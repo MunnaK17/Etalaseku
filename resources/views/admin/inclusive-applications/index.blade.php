@@ -1,67 +1,140 @@
 @extends('layouts.admin')
 
-@section('title', 'Permohonan Inklusif - Admin EtalaseKu')
+@section('title', 'Permohonan Inclusive - Admin')
 
 @section('content')
-<div class="py-8">
+<div class="p-6">
     <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Permohonan Program Inklusif</h1>
-        <p class="text-gray-600">Review dan approve permohonan Inclusive Seller</p>
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold" style="color: var(--text-primary);">Permohonan Inclusive</h1>
+            <p class="mt-1 text-sm" style="color: var(--text-muted);">Kelola permohonan Program Inclusive dari penyandang disabilitas</p>
+        </div>
     </div>
 
-    <!-- Applications Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <!-- Stats Cards -->
+    <div class="mb-6 grid gap-4 sm:grid-cols-4">
+        @php
+            $pending = $applications->where('status', 'pending')->count();
+            $approved = $applications->where('status', 'approved')->count();
+            $rejected = $applications->where('status', 'rejected')->count();
+        @endphp
+        <div class="rounded-xl border p-4" style="background: var(--card-bg); border-color: var(--border-color);">
+            <p class="text-sm" style="color: var(--text-muted);">Menunggu Review</p>
+            <p class="mt-1 text-2xl font-bold" style="color: var(--warning);">{{ $pending }}</p>
+        </div>
+        <div class="rounded-xl border p-4" style="background: var(--card-bg); border-color: var(--border-color);">
+            <p class="text-sm" style="color: var(--text-muted);">Disetujui</p>
+            <p class="mt-1 text-2xl font-bold" style="color: var(--success);">{{ $approved }}</p>
+        </div>
+        <div class="rounded-xl border p-4" style="background: var(--card-bg); border-color: var(--border-color);">
+            <p class="text-sm" style="color: var(--text-muted);">Ditolak</p>
+            <p class="mt-1 text-2xl font-bold" style="color: var(--error);">{{ $rejected }}</p>
+        </div>
+        <div class="rounded-xl border p-4" style="background: var(--card-bg); border-color: var(--border-color);">
+            <p class="text-sm" style="color: var(--text-muted);">Total</p>
+            <p class="mt-1 text-2xl font-bold" style="color: var(--text-primary);">{{ $applications->total() }}</p>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="mb-4 flex gap-2">
+        <a href="{{ request()->url() }}"
+           class="rounded-lg px-4 py-2 text-sm font-medium transition {{ !request('status') ? '' : '' }}"
+           style="{{ !request('status') ? 'background: var(--accent); color: #000;' : 'background: var(--bg-tertiary); color: var(--text-secondary);' }}">
+            Semua
+        </a>
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'pending']) }}"
+           class="rounded-lg px-4 py-2 text-sm font-medium transition"
+           style="{{ request('status') === 'pending' ? 'background: var(--warning); color: #000;' : 'background: var(--bg-tertiary); color: var(--text-secondary);' }}">
+            Menunggu
+        </a>
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'approved']) }}"
+           class="rounded-lg px-4 py-2 text-sm font-medium transition"
+           style="{{ request('status') === 'approved' ? 'background: var(--success); color: #fff;' : 'background: var(--bg-tertiary); color: var(--text-secondary);' }}">
+            Disetujui
+        </a>
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'rejected']) }}"
+           class="rounded-lg px-4 py-2 text-sm font-medium transition"
+           style="{{ request('status') === 'rejected' ? 'background: var(--error); color: #fff;' : 'background: var(--bg-tertiary); color: var(--text-secondary);' }}">
+            Ditolak
+        </a>
+    </div>
+
+    <!-- Applications List -->
+    <div class="rounded-xl border overflow-hidden" style="background: var(--card-bg); border-color: var(--border-color);">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Store</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jenis Disabilitas</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th class="px-6 py-3"></th>
+            <table class="w-full">
+                <thead>
+                    <tr style="background: var(--bg-secondary);">
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase" style="color: var(--text-muted);">Applicant</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase" style="color: var(--text-muted);">Jenis Disabilitas</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase" style="color: var(--text-muted);">Tanggal</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase" style="color: var(--text-muted);">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase" style="color: var(--text-muted);">Dokumen</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase" style="color: var(--text-muted);">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @forelse($applications as $application)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    @if($application->store->logo)
-                                        <img src="{{ $application->store->logo }}" alt="" class="w-10 h-10 rounded-lg object-cover">
-                                    @else
-                                        <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                                            <span class="font-bold text-gray-500">{{ substr($application->store->name, 0, 1) }}</span>
-                                        </div>
-                                    @endif
-                                    <div>
-                                        <p class="font-medium text-gray-900">{{ $application->store->name }}</p>
-                                        <p class="text-xs text-gray-500">{{ $application->store->user->email }}</p>
-                                    </div>
+                <tbody>
+                    @forelse($applications as $app)
+                        <tr class="border-t transition hover:opacity-80" style="border-color: var(--border-color);">
+                            <td class="px-4 py-4">
+                                <div>
+                                    <p class="font-medium" style="color: var(--text-primary);">{{ $app->applicant_name }}</p>
+                                    <p class="text-sm" style="color: var(--text-muted);">{{ $app->email }}</p>
+                                    <p class="text-sm" style="color: var(--text-muted);">{{ $app->whatsapp }}</p>
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
-                                <span class="text-sm text-gray-900">{{ ucfirst(str_replace('_', ' ', $application->disability_type)) }}</span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $application->created_at->format('d M Y') }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold {{ $application->status_badge_class }}">
-                                    {{ $application->status_display }}
+                            <td class="px-4 py-4">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium" style="background: var(--accent-light); color: var(--accent);">
+                                    {{ $app->disability_type_display }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right">
-                                <a href="{{ route('admin.inclusive-applications.show', $application->id) }}"
-                                   class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
-                                    Review
+                            <td class="px-4 py-4 whitespace-nowrap text-sm" style="color: var(--text-secondary);">
+                                {{ $app->created_at->format('d M Y') }}
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $app->status_badge_class }}">
+                                    {{ $app->status_display }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="flex gap-2">
+                                    @if($app->ktp_file)
+                                        <a href="{{ Storage::url($app->ktp_file) }}" target="_blank"
+                                           class="rounded px-2 py-1 text-xs font-medium transition"
+                                           style="background: var(--bg-tertiary); color: var(--text-secondary);">
+                                            KTP
+                                        </a>
+                                    @endif
+                                    @if($app->certificate_file)
+                                        <a href="{{ Storage::url($app->certificate_file) }}" target="_blank"
+                                           class="rounded px-2 py-1 text-xs font-medium transition"
+                                           style="background: var(--bg-tertiary); color: var(--text-secondary);">
+                                            Sertifikat
+                                        </a>
+                                    @endif
+                                    @if(!$app->hasDocuments())
+                                        <span class="text-xs" style="color: var(--text-muted);">-</span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-4 py-4 text-right">
+                                <a href="{{ route('admin.inclusive-applications.show', $app) }}"
+                                   class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition"
+                                   style="background: var(--accent-light); color: var(--accent);">
+                                    Detail
                                 </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">Tidak ada permohonan</td>
+                            <td colspan="6" class="px-4 py-12 text-center" style="color: var(--text-muted);">
+                                <svg class="mx-auto mb-3 h-12 w-12 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <p>Belum ada permohonan</p>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -69,8 +142,8 @@
         </div>
 
         @if($applications->hasPages())
-            <div class="px-6 py-4 border-t border-gray-200">
-                {{ $applications->links() }}
+            <div class="border-t px-4 py-3" style="border-color: var(--border-color);">
+                {{ $applications->withQueryString()->links() }}
             </div>
         @endif
     </div>

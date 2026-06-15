@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Analytics;
+use App\Models\LinkClick;
 use App\Models\Product;
 use App\Models\Store;
 use Illuminate\Http\Request;
@@ -28,7 +29,15 @@ class TrackController extends Controller
 
         $eventType = in_array($event, $validEvents) ? $event : 'cta_click';
 
-        // Log the analytics event
+        // Log the per-link analytics (link_clicks table)
+        LinkClick::logClick(
+            $product,
+            $eventType,
+            $request->ip(),
+            $request->userAgent()
+        );
+
+        // Also log to the general analytics table for aggregate stats
         Analytics::create([
             'store_id' => $store->id,
             'product_id' => $product->id,
@@ -37,6 +46,9 @@ class TrackController extends Controller
             'user_agent' => $request->userAgent(),
             'created_at' => now(),
         ]);
+
+        // Increment product's click_count for quick access
+        $product->incrementClickCount();
 
         // Determine redirect URL based on event type
         $redirectUrl = $this->getRedirectUrl($product, $event);
@@ -78,13 +90,11 @@ class TrackController extends Controller
         $store = $product->store;
         $message = $store->getProductInquiryMessage($product->name);
 
-        $number = preg_replace('/[^0-9]/', '', $store->whatsapp ?? '');
-        if (strlen($number) <= 11 && substr($number, 0, 1) === '8') {
-            $number = '62' . $number;
+        if (!$store->whatsapp_link) {
+            return $store->public_url;
         }
 
-        $baseUrl = "https://wa.me/{$number}";
-        return $baseUrl . '?text=' . urlencode($message);
+        return $store->whatsapp_link . '?text=' . urlencode($message);
     }
 
     /**

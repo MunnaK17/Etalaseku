@@ -20,10 +20,23 @@ class InclusiveApplication extends Model
         'admin_notes',
         'reviewed_at',
         'reviewed_by',
+        // New fields for public form
+        'applicant_name',
+        'whatsapp',
+        'email',
+        'ktp_file',
+        'certificate_file',
+        'rejection_reason',
+        'user_id',
+        'temp_password',
     ];
 
     protected $casts = [
         'reviewed_at' => 'datetime',
+    ];
+
+    protected $hidden = [
+        'temp_password',
     ];
 
     const STATUS_PENDING = 'pending';
@@ -36,6 +49,14 @@ class InclusiveApplication extends Model
     public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class);
+    }
+
+    /**
+     * Get the user created from this application.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**
@@ -60,5 +81,37 @@ class InclusiveApplication extends Model
             self::STATUS_REJECTED => 'Ditolak',
             default => 'Menunggu Review',
         };
+    }
+
+    /**
+     * Get disability type display name.
+     */
+    public function getDisabilityTypeDisplayAttribute(): string
+    {
+        return match($this->disability_type) {
+            'physical' => 'Disabilitas Fisik',
+            'visual' => 'Disabilitas Netra / Tunanetra',
+            'hearing' => 'Disabilitas Rungu / Wicara',
+            'intellectual' => 'Disabilitas Intelektual',
+            'mental' => 'Disabilitas Mental / Psikososial',
+            'multiple' => 'Disabilitas Ganda',
+            default => $this->disability_type,
+        };
+    }
+
+    /**
+     * Check if application has required documents.
+     */
+    public function hasDocuments(): bool
+    {
+        return !empty($this->ktp_file) || !empty($this->certificate_file);
+    }
+
+    /**
+     * Check if user account has been created.
+     */
+    public function hasUserAccount(): bool
+    {
+        return !empty($this->user_id);
     }
 }

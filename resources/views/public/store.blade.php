@@ -10,32 +10,63 @@
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet">
+    <!-- Dynamic Google Font Loader -->
+    @php
+        $fontFamily = $store->font_family ?? 'Inter';
+        $fontUrl = '';
+        $fallbackFamily = 'sans-serif';
+
+        $fontMap = [
+            'Helvetica' => ['url' => null, 'fallback' => 'system-ui, sans-serif'],
+            'Lato' => ['url' => 'Lato:wght@400;500;600;700', 'fallback' => 'sans-serif'],
+            'Raleway' => ['url' => 'Raleway:wght@400;500;600;700', 'fallback' => 'sans-serif'],
+            'Montserrat' => ['url' => 'Montserrat:wght@400;500;600;700', 'fallback' => 'sans-serif'],
+            'Roboto' => ['url' => 'Roboto:wght@400;500;600;700', 'fallback' => 'sans-serif'],
+            'Poppins' => ['url' => 'Poppins:wght@400;500;600;700', 'fallback' => 'sans-serif'],
+            'Inter' => ['url' => 'Inter:wght@400;500;600;700', 'fallback' => 'sans-serif'],
+            'Playfair Display' => ['url' => 'Playfair+Display:wght@400;500;600;700', 'fallback' => 'serif'],
+            'Bodoni MT' => ['url' => null, 'fallback' => "'Bodoni MT', 'Times New Roman', serif"],
+            'JetBrains Mono' => ['url' => 'JetBrains+Mono:wght@400;500;600;700', 'fallback' => 'monospace'],
+            'Great Vibes' => ['url' => 'Great+Vibes:wght@400;500;600;700', 'fallback' => 'cursive'],
+            'East Sea Dokdo' => ['url' => 'East+Sea+Dokdo:wght@400', 'fallback' => 'cursive'],
+            'Satisfy' => ['url' => 'Satisfy:wght@400', 'fallback' => 'cursive'],
+            'Fredoka' => ['url' => 'Fredoka:wght@400;500;600;700', 'fallback' => 'sans-serif'],
+            'Letter Gothic Std' => ['url' => 'Roboto+Mono:wght@400;500', 'fallback' => 'monospace'],
+            'Roboto Mono' => ['url' => 'Roboto+Mono:wght@400;500', 'fallback' => 'monospace'],
+        ];
+
+        if (isset($fontMap[$fontFamily])) {
+            if ($fontMap[$fontFamily]['url']) {
+                $fontUrl = 'https://fonts.googleapis.com/css2?family=' . $fontMap[$fontFamily]['url'] . '&display=swap';
+            }
+            $fallbackFamily = $fontMap[$fontFamily]['fallback'];
+        }
+    @endphp
+
+    @if($fontUrl)
+    <!-- Dynamic Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="{{ $fontUrl }}" rel="stylesheet">
+    @endif
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'Figtree', 'sans-serif'],
+                        sans: ['{{ $fontFamily }}', '{{ $fallbackFamily }}'],
                     },
                     colors: {
                         primary: {
-                            50: '#eef2ff',
-                            100: '#e0e7ff',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
+                            50: '{{ $store->header_gradient_start ?? '#6366f1' }}15',
+                            100: '{{ $store->header_gradient_start ?? '#6366f1' }}25',
+                            500: '{{ $store->header_gradient_start ?? '#6366f1' }}',
+                            600: '{{ $store->header_gradient_end ?? '#4f46e5' }}',
+                            700: '{{ $store->header_gradient_end ?? '#4338ca' }}',
                         },
                         whatsapp: {
                             500: '#25D366',
@@ -48,11 +79,90 @@
     </script>
 
     <style>
+        /* CSS Variables for Template - Uses Store Settings */
+        :root {
+            --bg-color: {{ $store->background_color ?? $store->getCurrentTemplateConfig()['bg_color'] ?? '#FFFFFF' }};
+            --bg-secondary: {{ $store->background_color ? $store->background_color : ($store->getCurrentTemplateConfig()['bg_secondary'] ?? 'transparent') }};
+            --button-color: {{ $store->cta_button_color ?? $store->getCurrentTemplateConfig()['button_color'] ?? '#4F46E5' }};
+            --text-color: {{ $store->getCurrentTemplateConfig()['text_color'] ?? '#1F2937' }};
+            --header-start: {{ $store->header_gradient_start ?? $store->getCurrentTemplateConfig()['header_gradient_start'] ?? '#4F46E5' }};
+            --header-end: {{ $store->header_gradient_end ?? $store->getCurrentTemplateConfig()['header_gradient_end'] ?? '#4338CA' }};
+            --card-bg: {{ $store->getCurrentTemplateConfig()['card_bg'] ?? '#FFFFFF' }};
+            --card-text: {{ $store->getCurrentTemplateConfig()['card_text'] ?? '#1F2937' }};
+        }
+
+        /* Apply background based on store settings */
+        @php
+            $bgColor = $store->background_color ?? $store->getCurrentTemplateConfig()['bg_color'] ?? '#FFFFFF';
+            $bgType = $store->background_type ?? 'flat';
+            $gradientStart = $store->background_gradient_start ?? $store->header_gradient_start ?? '#4F46E5';
+            $gradientEnd = $store->background_gradient_end ?? $bgColor;
+            $pageBackgroundStyle = match ($bgType) {
+                'gradient_up' => "background: linear-gradient(180deg, {$gradientStart} 0%, {$gradientEnd} 100%);",
+                'gradient_down' => "background: linear-gradient(0deg, {$gradientStart} 0%, {$gradientEnd} 100%);",
+                'image' => ($store->background_image && $store->isPro())
+                    ? "background-image: url('{$store->background_image}'); background-size: cover; background-position: center; background-attachment: fixed;"
+                    : "background-color: {$bgColor};",
+                default => "background-color: {$bgColor};",
+            };
+        @endphp
+        @if($bgType === 'gradient_up')
+            body { background: linear-gradient(180deg, {{ $gradientStart }} 0%, {{ $gradientEnd }} 100%) !important; }
+        @elseif($bgType === 'gradient_down')
+            body { background: linear-gradient(0deg, {{ $gradientStart }} 0%, {{ $gradientEnd }} 100%) !important; }
+        @elseif($bgType === 'image' && $store->background_image && $store->isPro())
+            body { background-image: url('{{ $store->background_image }}') !important; background-size: cover; background-position: center; background-attachment: fixed; }
+        @else
+            body { background-color: {{ $bgColor }} !important; }
+        @endif
+
+        .store-shell {
+            {!! $pageBackgroundStyle !!}
+        }
+        .store-main {
+            {!! $pageBackgroundStyle !!}
+        }
+        .layout-classic .profile-card {
+            align-items: center;
+            text-align: center;
+            flex-direction: column;
+        }
+        .layout-classic .profile-copy {
+            text-align: center;
+        }
+        .layout-classic .profile-name-row {
+            justify-content: center;
+        }
+        .layout-clean .store-header {
+            background: transparent !important;
+            color: #111827;
+        }
+        .layout-clean .header-wave,
+        .layout-clean .profile-media,
+        .layout-clean .header-actions {
+            display: none;
+        }
+        .layout-clean .profile-card {
+            margin-bottom: 0;
+        }
+        .layout-clean .profile-copy,
+        .layout-clean .profile-name-row {
+            text-align: center;
+            justify-content: center;
+        }
+        .layout-clean .profile-name,
+        .layout-clean .profile-about {
+            color: var(--card-text) !important;
+        }
+        .store-social-links a {
+            color: var(--card-text);
+        }
+
         /* Smooth transitions */
-        .product-card {
+        .block-item {
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .product-card:active {
+        .block-item:active {
             transform: scale(0.98);
         }
 
@@ -124,40 +234,206 @@
         a:focus-visible {
             box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3);
         }
+
+        /* Social icon colors */
+        .social-instagram { color: #E4405F; }
+        .social-tiktok { color: #000000; }
+        .social-youtube { color: #FF0000; }
+        .social-twitter { color: #1DA1F2; }
+        .social-facebook { color: #1877F2; }
+        .social-whatsapp { color: #25D366; }
+        .social-telegram { color: #0088CC; }
+
+        /* Button Shape Styles */
+        @php
+            $buttonShape = $store->cta_button_shape ?? 'rounded';
+            $ctaColor = $store->cta_button_color ?? $store->getCurrentTemplateConfig()['button_color'] ?? '#4F46E5';
+            $ctaTextColor = $store->cta_button_text_color ?? $store->getCurrentTemplateConfig()['text_color'] ?? '#FFFFFF';
+            $ctaStyle = $store->cta_button_style ?? 'fill';
+        @endphp
+
+        /* CTA Button Base Styles */
+        .cta-btn {
+            @if($ctaStyle === 'outline')
+                border: 2px solid {{ $ctaColor }};
+                background: transparent;
+                color: {{ $ctaColor }};
+            @else
+                background-color: {{ $ctaColor }};
+                color: {{ $ctaTextColor }};
+            @endif
+        }
+        .cta-btn:hover {
+            @if($ctaStyle === 'outline')
+                background: {{ $ctaColor }};
+                color: white;
+            @else
+                filter: brightness(1.1);
+            @endif
+        }
+
+        /* Hard Shadow Buttons */
+        .btn-hard-shadow {
+            box-shadow: 4px 4px 0px #000;
+        }
+        .btn-hard-shadow:hover {
+            box-shadow: 2px 2px 0px #000;
+            transform: translate(2px, 2px);
+        }
+
+        /* Soft Shadow Buttons */
+        .btn-soft-shadow {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn-soft-shadow:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+
+        /* Rainbow Border Button */
+        .btn-rainbow {
+            position: relative;
+            background: {{ $ctaColor }};
+            border: none;
+        }
+        .btn-rainbow::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            padding: 3px;
+            border-radius: inherit;
+            background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+
+        /* Bracket Style Button */
+        .btn-bracket::before { content: '<'; margin-right: 4px; opacity: 0.6; }
+        .btn-bracket::after { content: '>'; margin-left: 4px; opacity: 0.6; }
+
+        /* Scribble Style Button */
+        .btn-scribble {
+            position: relative;
+            text-decoration: none;
+        }
+        .btn-scribble::after {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            left: 15%;
+            width: 70%;
+            height: 3px;
+            background: {{ $ctaTextColor }};
+            opacity: 0.6;
+            transform: rotate(-2deg);
+            border-radius: 2px;
+        }
+
+        /* Glow Effects for Neon/Cyberpunk Templates */
+        @if($store->getTemplateSpecialClass() === 'glow-neon')
+            .btn-glow {
+                box-shadow: 0 0 10px var(--button-color), 0 0 20px var(--button-color), 0 0 30px var(--button-color);
+                animation: pulse-glow 2s ease-in-out infinite;
+            }
+            .btn-glow:hover {
+                box-shadow: 0 0 15px var(--button-color), 0 0 30px var(--button-color), 0 0 45px var(--button-color);
+            }
+            @keyframes pulse-glow {
+                0%, 100% { box-shadow: 0 0 10px var(--button-color), 0 0 20px var(--button-color); }
+                50% { box-shadow: 0 0 15px var(--button-color), 0 0 30px var(--button-color), 0 0 40px var(--button-color); }
+            }
+        @endif
+
+        @if($store->getTemplateSpecialClass() === 'glow-cyberpunk')
+            .btn-glow {
+                box-shadow: 0 0 12px #ff007f, 0 0 24px rgba(255, 0, 127, 0.5);
+                animation: cyberpunk-pulse 1.5s ease-in-out infinite;
+            }
+            .btn-glow:hover {
+                box-shadow: 0 0 20px #ff007f, 0 0 40px rgba(255, 0, 127, 0.7);
+            }
+            @keyframes cyberpunk-pulse {
+                0%, 100% { box-shadow: 0 0 12px #ff007f, 0 0 24px rgba(255, 0, 127, 0.5); }
+                50% { box-shadow: 0 0 18px #ff007f, 0 0 36px rgba(255, 0, 127, 0.7); }
+            }
+        @endif
+
+        /* Monochrome Border Style */
+        @if($store->getTemplateSpecialClass() === 'border-monochrome')
+            .btn-outline-black {
+                border: 2px solid #000000;
+                background: transparent;
+                color: #000000;
+            }
+            .btn-outline-black:hover {
+                background: #000000;
+                color: #ffffff;
+            }
+        @endif
     </style>
 </head>
-<body class="font-sans antialiased bg-gray-50 min-h-screen">
+@php
+    $layout = $store->layout ?? 'modern';
+    $socialLinks = $store->social_links ?? [];
+@endphp
+<body class="font-sans antialiased min-h-screen layout-{{ $layout }} @if($store->getTemplateSpecialClass()) body-template-{{ $store->getTemplateSpecialClass() }} @endif" style="background-color: var(--bg-color);">
     <!-- Skip to Content - Accessibility -->
-    <a href="#products-section" class="skip-to-content">Langsung ke produk</a>
+    <a href="#blocks-section" class="skip-to-content">Langsung ke konten</a>
 
-    <div class="max-w-lg mx-auto bg-white min-h-screen shadow-xl">
+    <div class="store-shell max-w-lg mx-auto min-h-screen shadow-xl flex flex-col">
         <!-- Store Header -->
-        <header class="bg-gradient-to-br from-primary-600 to-primary-700 text-white">
-            <div class="px-5 pt-8 pb-6">
+        <header class="store-header" style="background: linear-gradient(135deg, {{ $store->header_gradient_start ?? $store->getCurrentTemplateConfig()['header_gradient_start'] ?? '#4F46E5' }} 0%, {{ $store->header_gradient_end ?? $store->getCurrentTemplateConfig()['header_gradient_end'] ?? '#4338CA' }} 100%);">
+            @if($store->banner)
+            <!-- Banner -->
+            <div class="h-32 bg-cover bg-center" style="background-image: url('{{ $store->banner }}');"></div>
+            @endif
+            <div class="px-5 pt-6 pb-6">
                 <!-- Profile Section -->
-                <div class="flex items-center gap-4 mb-4">
-                    @if($store->logo)
-                        <img src="{{ $store->logo }}"
-                             alt="{{ $store->name }}"
-                             class="w-20 h-20 rounded-2xl object-cover border-4 border-white/20 shadow-lg">
-                    @else
-                        <div class="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center border-4 border-white/20">
-                            <span class="text-3xl font-bold">{{ substr($store->name, 0, 1) }}</span>
+                <div class="profile-card flex items-center gap-4 mb-4">
+                    @unless($layout === 'clean')
+                        <div class="profile-media flex-shrink-0">
+                            @if($store->profile_image)
+                                <img src="{{ $store->profile_image }}"
+                                     alt="{{ $store->name }}"
+                                     class="w-20 h-20 rounded-2xl object-cover border-4 border-white/20 shadow-lg">
+                            @elseif($store->logo)
+                                <img src="{{ $store->logo }}"
+                                     alt="{{ $store->name }}"
+                                     class="w-20 h-20 rounded-2xl object-cover border-4 border-white/20 shadow-lg">
+                            @else
+                                <div class="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center border-4 border-white/20">
+                                    <span class="text-3xl font-bold">{{ substr($store->name, 0, 1) }}</span>
+                                </div>
+                            @endif
                         </div>
-                    @endif
-                    <div class="flex-1">
-                        <h1 class="text-2xl font-bold">{{ $store->name }}</h1>
-                        @if($store->description)
-                            <p class="text-primary-100 text-sm mt-1 line-clamp-2">{{ $store->description }}</p>
+                    @endunless
+                    <div class="profile-copy flex-1">
+                        <div class="profile-name-row flex items-center gap-2">
+                            <h1 class="profile-name text-2xl font-bold" style="color: {{ $store->profile_text_color ?? '#FFFFFF' }};">{{ $store->name }}</h1>
+                            @if($store->is_verified_seller)
+                                <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-500 rounded-full" title="Seller Terverifikasi">
+                                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                </span>
+                            @endif
+                        </div>
+                        @if($store->about_text)
+                            <p class="profile-about text-sm mt-1 line-clamp-2" style="color: {{ $layout === 'clean' ? 'var(--card-text)' : ($store->profile_text_color ?? '#FFFFFF') }}; opacity: {{ $layout === 'clean' ? '1' : '0.85' }};">{{ $store->about_text }}</p>
+                        @elseif($store->description)
+                            <p class="profile-about text-sm mt-1 line-clamp-2" style="color: {{ $layout === 'clean' ? 'var(--card-text)' : ($store->profile_text_color ?? '#FFFFFF') }}; opacity: {{ $layout === 'clean' ? '1' : '0.85' }};">{{ $store->description }}</p>
                         @endif
                     </div>
                 </div>
 
                 <!-- Action Buttons Row -->
-                <div class="flex gap-3 mt-5">
+                <div class="header-actions flex gap-3 mt-5">
                     @if($store->whatsapp)
-                        <a href="{{ route('track.click', ['product' => 0, 'event' => 'whatsapp_click']) }}?store=1"
-                           class="flex-1 flex items-center justify-center gap-2 bg-white text-primary-600 font-semibold py-3 px-4 rounded-xl hover:bg-primary-50 transition-all active:scale-[0.98]">
+                        <a href="{{ $store->whatsapp_link }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="cta-btn flex-1 flex items-center justify-center gap-2 font-semibold py-3 px-4 rounded-xl transition-all active:scale-[0.98] @if($store->getTemplateSpecialClass() === 'glow-neon' || $store->getTemplateSpecialClass() === 'glow-cyberpunk') btn-glow @endif">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                             </svg>
@@ -172,90 +448,271 @@
                         </svg>
                     </button>
                 </div>
+
+                @if(count($socialLinks) > 0)
+                    <div class="store-social-links flex flex-wrap justify-center gap-2 mt-5">
+                        @foreach($socialLinks as $platform => $url)
+                            <a href="{{ $url }}"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="inline-flex items-center justify-center px-3 py-1.5 rounded-full bg-white/80 border border-white/40 text-xs font-semibold shadow-sm hover:bg-white transition"
+                               title="{{ ucfirst($platform) }}">
+                                {{ ucfirst($platform) }}
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
             </div>
 
             <!-- Wave decoration -->
-            <svg class="w-full h-6 text-white" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <svg class="header-wave w-full h-6 text-white" viewBox="0 0 1200 120" preserveAspectRatio="none">
                 <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C57.1,118.92,156.63,69.08,321.39,56.44Z" fill="currentColor"></path>
             </svg>
         </header>
 
-        <!-- Products Section -->
-        <main id="products-section" class="px-5 py-6 -mt-4">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold text-gray-900">Produk</h2>
-                <span class="text-sm text-gray-500">{{ $products->count() }} item</span>
-            </div>
-
-            @if($products->count() > 0)
+        <!-- Blocks Section -->
+        <main id="blocks-section" class="store-main px-5 py-6 {{ $layout === 'clean' ? 'pt-3' : '-mt-4' }} flex-1">
+            @if($blocks->count() > 0)
                 <div class="space-y-4">
-                    @foreach($products as $product)
-                        <div class="product-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <!-- Product Image -->
-                            <div class="aspect-[4/3] bg-gray-100 relative overflow-hidden">
-                                @if($product->image)
-                                    <img src="{{ $product->image }}"
-                                         alt="{{ $product->name }}"
-                                         class="w-full h-full object-cover"
-                                         loading="lazy">
-                                @else
-                                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                                        <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    @foreach($blocks as $block)
+                        @switch($block->type)
+                            {{-- LINK BLOCK --}}
+                            @case('link')
+                                @php
+                                    $linkContent = $block->content ? json_decode($block->content, true) : [];
+                                    $linkUrl = $linkContent['url'] ?? '#';
+                                    $openNewTab = $linkContent['open_in_new_tab'] ?? true;
+                                @endphp
+                                <a href="{{ $linkUrl }}"
+                                   target="{{ $openNewTab ? '_blank' : '_self' }}"
+                                   rel="noopener noreferrer"
+                                   class="block-item w-full flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl p-4 transition-all">
+                                    <div class="w-12 h-12 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                                         </svg>
                                     </div>
-                                @endif
-
-                                <!-- Product Type Badge -->
-                                <div class="absolute top-3 left-3">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md {{ $product->product_type_badge_classes }}">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $product->product_type_icon }}"/>
-                                        </svg>
-                                        {{ ucfirst($product->product_type) }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Product Info -->
-                            <div class="p-4">
-                                <h3 class="font-bold text-gray-900 text-lg">{{ $product->name }}</h3>
-
-                                @if($product->description)
-                                    <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ $product->description }}</p>
-                                @endif
-
-                                <!-- Price -->
-                                @if($product->price)
-                                    <div class="mt-3">
-                                        <span class="text-2xl font-bold text-primary-600">{{ $product->formatted_price }}</span>
+                                    <div class="flex-1 text-left">
+                                        <p class="font-semibold text-gray-900">{{ $block->title ?? 'Link' }}</p>
+                                        <p class="text-sm text-gray-500 truncate">{{ $linkUrl }}</p>
                                     </div>
-                                @endif
-
-                                <!-- CTA Button -->
-                                <a href="{{ route('track.click', ['product' => $product->id, 'event' => $product->cta_type === 'whatsapp' ? 'whatsapp_click' : ($product->cta_type === 'checkout' ? 'checkout_click' : ($product->cta_type === 'external_link' ? 'external_click' : 'download_click'))]) }}"
-                                   class="mt-4 flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl font-semibold text-base transition-all {{ $product->cta_button_color_classes }} active:scale-[0.98]">
-                                    @if($product->cta_type === 'whatsapp')
-                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                                        </svg>
-                                    @elseif($product->cta_type === 'checkout')
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                        </svg>
-                                    @elseif($product->cta_type === 'download')
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                        </svg>
-                                    @elseif($product->cta_type === 'external_link')
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                                        </svg>
-                                    @endif
-                                    <span>{{ $product->cta_button_text }}</span>
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                    </svg>
                                 </a>
-                            </div>
-                        </div>
+                            @break
+
+                            {{-- TEXT BLOCK --}}
+                            @case('text')
+                                @php
+                                    $textContent = $block->content ? json_decode($block->content, true) : [];
+                                    $text = $textContent['text'] ?? '';
+                                @endphp
+                                <div class="block-item bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                    @if($block->title)
+                                        <h3 class="font-bold text-gray-900 text-lg mb-2">{{ $block->title }}</h3>
+                                    @endif
+                                    <div class="text-gray-700 prose prose-sm max-w-none">
+                                        {!! nl2br(e($text)) !!}
+                                    </div>
+                                </div>
+                            @break
+
+                            {{-- IMAGE BLOCK --}}
+                            @case('image')
+                                @php
+                                    $imageContent = $block->content ? json_decode($block->content, true) : [];
+                                    $alt = $imageContent['alt'] ?? $block->title ?? 'Image';
+                                    $imageUrl = $imageContent['thumbnail_url'] ?? $block->thumbnail_url ?? '';
+                                    $imageLink = $imageContent['link'] ?? '';
+                                @endphp
+                                <div class="block-item rounded-xl overflow-hidden border border-gray-200">
+                                    @if($imageLink)
+                                        <a href="{{ $imageLink }}" target="_blank" rel="noopener noreferrer">
+                                            <img src="{{ $imageUrl }}"
+                                                 alt="{{ $alt }}"
+                                                 class="w-full h-auto object-cover hover:opacity-90 transition-opacity"
+                                                 loading="lazy">
+                                        </a>
+                                    @elseif($imageUrl)
+                                        <img src="{{ $imageUrl }}"
+                                             alt="{{ $alt }}"
+                                             class="w-full h-auto object-cover"
+                                             loading="lazy">
+                                    @endif
+                                    @if($block->title)
+                                        <div class="p-3 bg-gray-50">
+                                            <p class="text-sm text-gray-600">{{ $block->title }}</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            @break
+
+                            {{-- VIDEO BLOCK --}}
+                            @case('video')
+                                @php
+                                    $videoContent = $block->content ? json_decode($block->content, true) : [];
+                                    $embedUrl = $videoContent['embed_url'] ?? $videoContent['video_url'] ?? '';
+                                @endphp
+                                <div class="block-item rounded-xl overflow-hidden border border-gray-200">
+                                    @if($embedUrl)
+                                        <div class="relative pt-[56.25%] bg-gray-900">
+                                            <iframe
+                                                src="{{ $embedUrl }}"
+                                                class="absolute inset-0 w-full h-full"
+                                                frameborder="0"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowfullscreen
+                                                loading="lazy">
+                                            </iframe>
+                                        </div>
+                                    @endif
+                                    @if($block->title)
+                                        <div class="p-3 bg-gray-50">
+                                            <p class="font-medium text-gray-900">{{ $block->title }}</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            @break
+
+                            {{-- SOCIAL CONNECT BLOCK --}}
+                            @case('social_network')
+                            @case('social_connect')
+                                @php
+                                    $socialContent = $block->content ? json_decode($block->content, true) : [];
+                                    $socials = $socialContent['socials'] ?? [];
+                                @endphp
+                                @if(count($socials) > 0)
+                                <div class="block-item bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                    @if($block->title)
+                                        <h3 class="font-semibold text-gray-900 mb-3">{{ $block->title }}</h3>
+                                    @endif
+                                    <div class="flex flex-wrap justify-center gap-3">
+                                        @foreach($socials as $platform => $data)
+                                            @if(isset($data['value']) && $data['value'])
+                                                <div class="flex flex-col items-center">
+                                                    <a href="{{ $store->formatSocialLink($platform, $data['value']) }}"
+                                                       target="_blank"
+                                                       rel="noopener noreferrer"
+                                                       class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:scale-110 transition-transform shadow-sm"
+                                                       title="{{ ucfirst($platform) }}">
+                                                        @switch($platform)
+                                                            @case('instagram')
+                                                                <svg class="w-5 h-5 social-instagram" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                                                                @break
+                                                            @case('tiktok')
+                                                                <svg class="w-5 h-5 social-tiktok" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+                                                                @break
+                                                            @case('youtube')
+                                                                <svg class="w-5 h-5 social-youtube" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                                                @break
+                                                            @case('twitter')
+                                                            @case('x')
+                                                                <svg class="w-5 h-5 social-twitter" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                                                @break
+                                                            @case('facebook')
+                                                                <svg class="w-5 h-5 social-facebook" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                                                                @break
+                                                            @case('whatsapp')
+                                                                <svg class="w-5 h-5 social-whatsapp" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                                                                @break
+                                                            @case('telegram')
+                                                                <svg class="w-5 h-5 social-telegram" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                                                                @break
+                                                            @case('shopee')
+                                                                <svg class="w-5 h-5 text-orange-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12.001 2.002c-5.522 0-9.999 4.477-9.999 9.999 0 4.99 3.656 9.126 8.437 9.879v-6.988h-2.54v-2.891h2.54V9.798c0-2.508 1.493-3.891 3.776-3.891 1.094 0 2.24.195 2.24.195v2.459h-1.264c-1.24 0-1.628.772-1.628 1.563v1.875h2.771l-.443 2.891h-2.328v6.988C18.344 21.129 22 16.992 22 12.001c0-5.522-4.477-9.999-9.999-9.999z"/></svg>
+                                                                @break
+                                                            @case('tokopedia')
+                                                                <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.02c-5.51 0-9.98 4.47-9.98 9.98s4.47 9.98 9.98 9.98 9.98-4.47 9.98-9.98-4.47-9.98-9.98-9.98zm0 1.5c4.69 0 8.48 3.81 8.48 8.48s-3.79 8.48-8.48 8.48-8.48-3.79-8.48-8.48 3.79-8.48 8.48-8.48zm-.5 2.48v5.18l4.16 2.42-.08.14-4.08-2.38v-5.36h-.5z"/></svg>
+                                                                @break
+                                                            @default
+                                                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                                                        @endswitch
+                                                    </a>
+                                                    @if(isset($data['label']) && $data['label'])
+                                                        <span class="mt-1 text-xs font-semibold text-gray-700">{{ $data['label'] }}</span>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                </div>
+                                @endif
+                            @break
+
+                            {{-- PRODUCT BLOCK --}}
+                            @case('product')
+                            @case('digital_product')
+                                @php
+                                    $productContent = $block->content ? json_decode($block->content, true) : [];
+                                    $productName = $productContent['name'] ?? $block->title ?? 'Produk';
+                                    $productEmoji = $productContent['emoji'] ?? '';
+                                    $productDescription = $productContent['description'] ?? '';
+                                    $productPrice = $productContent['price'] ?? 0;
+                                    $productImage = $productContent['image'] ?? $block->thumbnail_url ?? '';
+                                    $ctaType = $productContent['cta_type'] ?? ($block->type === 'digital_product' ? 'checkout' : 'whatsapp');
+                                    if ($ctaType === 'checkout' && empty($productContent['product_id'])) {
+                                        $ctaType = 'whatsapp';
+                                    }
+
+                                    $whatsappLink = $store->whatsapp_link_with_message
+                                        ? $store->whatsapp_link_with_message . '?text=' . urlencode("Halo, saya tertarik dengan \"{$productName}\" di etalase {$store->name}")
+                                        : $store->whatsapp_link;
+                                @endphp
+                                <div class="block-item bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                                    @if($productImage)
+                                        <div class="aspect-square bg-gray-100 overflow-hidden">
+                                            <img src="{{ $productImage }}"
+                                                 alt="{{ $productName }}"
+                                                 class="w-full h-full object-cover"
+                                                 loading="lazy">
+                                        </div>
+                                    @endif
+                                    <div class="p-4">
+                                        <div class="flex items-start gap-2 mb-2">
+                                            @if($productEmoji)
+                                                <span class="text-xl">{{ $productEmoji }}</span>
+                                            @endif
+                                            <h3 class="font-semibold text-gray-900 flex-1">{{ $productName }}</h3>
+                                        </div>
+                                        @if($productDescription)
+                                            <p class="text-sm text-gray-600 line-clamp-2 mb-3">{{ $productDescription }}</p>
+                                        @endif
+                                        @if($productPrice > 0)
+                                            <p class="font-bold text-lg text-primary-600 mb-3">Rp {{ number_format($productPrice, 0, ',', '.') }}</p>
+                                        @endif
+                                        <div class="flex gap-2">
+                                            @if($ctaType === 'whatsapp' && $store->whatsapp)
+                                                <a href="{{ $whatsappLink }}"
+                                                   target="_blank"
+                                                   rel="noopener noreferrer"
+                                                   class="cta-btn flex-1 flex items-center justify-center gap-2 font-semibold py-3 px-4 transition-all active:scale-[0.98] {{ $store->cta_button_shape === 'sharp' ? 'rounded-none' : ($store->cta_button_shape === 'pill' || $store->cta_button_shape === 'pill-hard' ? 'rounded-full' : ($store->cta_button_shape === 'sharp-hard' ? 'rounded-none' : 'rounded-lg')) }} {{ in_array($store->cta_button_shape, ['sharp-hard', 'rounded-hard', 'pill-hard']) ? 'btn-hard-shadow' : '' }} {{ in_array($store->cta_button_shape, ['square-soft', 'rounded-soft']) ? 'btn-soft-shadow' : '' }} {{ $store->cta_button_shape === 'rainbow' ? 'btn-rainbow text-white' : '' }} {{ $store->cta_button_shape === 'bracket' ? 'btn-bracket' : '' }} {{ $store->cta_button_shape === 'scribble' ? 'btn-scribble' : '' }} @if($store->getTemplateSpecialClass() === 'glow-neon' || $store->getTemplateSpecialClass() === 'glow-cyberpunk') btn-glow @endif"
+                                                   style="@if($store->cta_button_shape === 'sharp-hard') box-shadow: 4px 4px 0px #000; @elseif($store->cta_button_shape === 'rounded-hard') box-shadow: 4px 4px 0px #000; @elseif($store->cta_button_shape === 'pill-hard') box-shadow: 4px 4px 0px #000; @elseif($store->cta_button_shape === 'square-soft') box-shadow: 0 4px 15px rgba(0,0,0,0.2); @elseif($store->cta_button_shape === 'rounded-soft') box-shadow: 0 4px 15px rgba(0,0,0,0.2); @endif {{ $store->cta_button_shadow && !in_array($store->cta_button_shape, ['sharp-hard', 'rounded-hard', 'pill-hard', 'square-soft', 'rounded-soft']) ? 'shadow-lg' : '' }}">
+                                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                                                    </svg>
+                                                    <span>Hubungi</span>
+                                                </a>
+                                            @elseif($ctaType === 'checkout')
+                                                <a href="{{ route('checkout.show', ['product' => $productContent['product_id'] ?? 0]) }}"
+                                                   class="cta-btn flex-1 flex items-center justify-center gap-2 font-semibold py-3 px-4 transition-all active:scale-[0.98] {{ $store->cta_button_shape === 'sharp' ? 'rounded-none' : ($store->cta_button_shape === 'pill' || $store->cta_button_shape === 'pill-hard' ? 'rounded-full' : ($store->cta_button_shape === 'sharp-hard' ? 'rounded-none' : 'rounded-lg')) }} {{ in_array($store->cta_button_shape, ['sharp-hard', 'rounded-hard', 'pill-hard']) ? 'btn-hard-shadow' : '' }} {{ in_array($store->cta_button_shape, ['square-soft', 'rounded-soft']) ? 'btn-soft-shadow' : '' }} {{ $store->cta_button_shape === 'rainbow' ? 'btn-rainbow text-white' : '' }} {{ $store->cta_button_shape === 'bracket' ? 'btn-bracket' : '' }} {{ $store->cta_button_shape === 'scribble' ? 'btn-scribble' : '' }} @if($store->getTemplateSpecialClass() === 'glow-neon' || $store->getTemplateSpecialClass() === 'glow-cyberpunk') btn-glow @endif"
+                                                   style="@if($store->cta_button_shape === 'sharp-hard') box-shadow: 4px 4px 0px #000; @elseif($store->cta_button_shape === 'rounded-hard') box-shadow: 4px 4px 0px #000; @elseif($store->cta_button_shape === 'pill-hard') box-shadow: 4px 4px 0px #000; @elseif($store->cta_button_shape === 'square-soft') box-shadow: 0 4px 15px rgba(0,0,0,0.2); @elseif($store->cta_button_shape === 'rounded-soft') box-shadow: 0 4px 15px rgba(0,0,0,0.2); @endif {{ $store->cta_button_shadow && !in_array($store->cta_button_shape, ['sharp-hard', 'rounded-hard', 'pill-hard', 'square-soft', 'rounded-soft']) ? 'shadow-lg' : '' }}">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                                    </svg>
+                                                    <span>Beli Sekarang</span>
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @break
+
+                            @default
+                                <div class="block-item bg-gray-100 rounded-xl p-4 border border-gray-200 text-gray-500 text-sm">
+                                    Unknown block type: {{ $block->type }}
+                                </div>
+                        @endswitch
                     @endforeach
                 </div>
             @else
@@ -263,22 +720,22 @@
                 <div class="text-center py-12">
                     <div class="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
                         <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900">Belum Ada Produk</h3>
-                    <p class="text-gray-500 mt-1">Toko ini belum menambahkan produk.</p>
+                    <h3 class="text-lg font-semibold text-gray-900">Belum Ada Konten</h3>
+                    <p class="text-gray-500 mt-1">Toko ini belum menambahkan konten.</p>
                 </div>
             @endif
         </main>
 
         <!-- Footer -->
-        <footer class="bg-gray-900 text-gray-400 py-8 px-5 mt-6">
+        <footer class="bg-gray-900 text-gray-400 py-8 px-5 mt-auto">
             <div class="text-center">
                 <div class="flex items-center justify-center gap-2 mb-3">
-                    <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                        <span class="text-white font-bold text-sm">E</span>
-                    </div>
+                    <img src="{{ asset('images/image4-removebg-preview.png') }}"
+                         alt="Logo EtalaseKu"
+                         class="h-9 w-auto object-contain">
                     <span class="font-semibold text-white">EtalaseKu</span>
                 </div>
                 <p class="text-sm">Buat etalase digitalmu di</p>
@@ -288,18 +745,90 @@
         </footer>
     </div>
 
-    <!-- WhatsApp Floating Button -->
-    @if($store->whatsapp)
-        <a href="{{ route('track.click', ['product' => 0, 'event' => 'whatsapp_click']) }}?store=1"
-           aria-label="Chat WhatsApp dengan {{ $store->name }}"
-           class="fixed bottom-6 right-6 z-50 bg-whatsapp-500 hover:bg-whatsapp-600 text-white p-4 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95">
-            <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-        </a>
-    @endif
+    <!-- EtalaseKu Support Floating Button -->
+    <button type="button"
+            onclick="openSupportModal()"
+            aria-label="Laporkan kendala ke Customer Service EtalaseKu"
+            class="fixed bottom-6 right-6 z-50 text-white p-4 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95"
+            style="background: #fbbf24; color: #ffffff; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 10a6 6 0 10-12 0v4a3 3 0 003 3h1m8-7v4a3 3 0 01-3 3h-1m-4 0h4m-2 0v2m-6-5H5a2 2 0 01-2-2v-1a2 2 0 012-2h1m12 5h1a2 2 0 002-2v-1a2 2 0 00-2-2h-1"/>
+        </svg>
+    </button>
+
+    <div id="supportModal"
+         class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/50 px-5"
+         style="font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="supportModalTitle">
+        <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl">
+            <div class="flex items-start gap-3">
+                <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-white" style="background: #fbbf24;">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 10a6 6 0 10-12 0v4a3 3 0 003 3h1m8-7v4a3 3 0 01-3 3h-1m-4 0h4m-2 0v2m-6-5H5a2 2 0 01-2-2v-1a2 2 0 012-2h1m12 5h1a2 2 0 002-2v-1a2 2 0 00-2-2h-1"/>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <h2 id="supportModalTitle" class="text-lg font-bold text-gray-900">Customer Service EtalaseKu</h2>
+                    <p class="mt-1 text-sm leading-6 text-gray-600">
+                        Gunakan fitur ini untuk melaporkan kendala, penyalahgunaan, atau kejadian mencurigakan pada etalase ini kepada admin EtalaseKu.
+                    </p>
+                </div>
+            </div>
+            <div class="mt-5 flex gap-3">
+                <button type="button"
+                        onclick="closeSupportModal()"
+                        class="flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition"
+                        style="border-color: #fbbf24; color: #92400e; background: #ffffff;">
+                    Batal
+                </button>
+                <a id="supportWhatsAppLink"
+                   href="#"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="flex-1 rounded-xl px-4 py-3 text-center text-sm font-semibold text-white transition"
+                   style="background: #fbbf24; color: #ffffff;">
+                    Lanjut ke WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
 
     <script>
+        const supportModal = document.getElementById('supportModal');
+        const supportWhatsAppLink = document.getElementById('supportWhatsAppLink');
+        const supportPhone = '6285891565501';
+
+        function openSupportModal() {
+            const message = [
+                'Halo Admin EtalaseKu, saya ingin melaporkan kendala pada etalase:',
+                @json($store->name),
+                window.location.href,
+            ].join('\n');
+
+            supportWhatsAppLink.href = `https://wa.me/${supportPhone}?text=${encodeURIComponent(message)}`;
+            supportModal.classList.remove('hidden');
+            supportModal.classList.add('flex');
+        }
+
+        function closeSupportModal() {
+            supportModal.classList.add('hidden');
+            supportModal.classList.remove('flex');
+        }
+
+        supportModal.addEventListener('click', function (event) {
+            if (event.target === supportModal) {
+                closeSupportModal();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && !supportModal.classList.contains('hidden')) {
+                closeSupportModal();
+            }
+        });
+
         // Share functionality
         function shareStore() {
             const shareData = {
@@ -318,24 +847,6 @@
                 });
             }
         }
-
-        // Track page view on load
-        document.addEventListener('DOMContentLoaded', function() {
-            const storeUsername = '{{ $store->username }}';
-
-            // Skip tracking for bots
-            const isBot = /bot|spider|crawler/i.test(navigator.userAgent);
-            if (isBot) return;
-
-            // Track page view (fire and forget)
-            fetch(`/track/pageview/${storeUsername}`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Content-Type': 'application/json',
-                },
-            }).catch(() => {});
-        });
     </script>
 </body>
 </html>

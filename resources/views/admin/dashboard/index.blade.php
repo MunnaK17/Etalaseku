@@ -160,7 +160,7 @@
                 @forelse($recentApplications as $application)
                     <div class="px-6 py-4 flex items-center justify-between">
                         <div>
-                            <p class="font-medium text-gray-900">{{ $application->store->name }}</p>
+                            <p class="font-medium text-gray-900">{{ $application->store->name ?? 'Toko tidak ditemukan' }}</p>
                             <p class="text-xs text-gray-500">{{ $application->disability_type }} - {{ $application->created_at->diffForHumans() }}</p>
                         </div>
                         <a href="{{ route('admin.inclusive-applications.show', $application->id) }}"

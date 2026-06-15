@@ -85,18 +85,4 @@ class PublicStoreController extends Controller
 
         return redirect()->away($redirectUrl);
     }
-
-    /**
-     * Simulate checkout (placeholder for future implementation).
-     */
-    public function simulateCheckout(Request $request, Product $product): View
-    {
-        $store = $product->store;
-
-        if (!$store->is_active || !$product->is_active) {
-            abort(404);
-        }
-
-        return view('public.checkout-simulate', compact('store', 'product'));
-    }
 }

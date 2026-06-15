@@ -161,7 +161,7 @@
                 <h2 class="text-xl font-bold text-gray-900 mb-2">Daftar Program</h2>
                 <p class="text-gray-500 mb-6">Isi formulir di bawah untuk mengajukan menjadi Inclusive Seller</p>
 
-                <form action="{{ route('seller.inclusive-program.submit') }}" method="POST" class="space-y-6">
+                <form action="{{ route('inclusive-program.submit') }}" method="POST" class="space-y-6">
                     @csrf
 
                     <div>

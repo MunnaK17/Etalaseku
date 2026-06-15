@@ -18,21 +18,9 @@ class AdminMiddleware
             return redirect()->route('login');
         }
 
-        // Check for admin email or role
         $user = $request->user();
 
-        // Allow specific admin emails or users with admin role
-        $adminEmails = [
-            'admin@etalaseku.test',
-            'admin@etalaseku.com',
-        ];
-
-        if (in_array(strtolower($user->email), array_map('strtolower', $adminEmails))) {
-            return $next($request);
-        }
-
-        // Check for admin role
-        if ($user->role === 'admin') {
+        if ($user->isAdmin()) {
             return $next($request);
         }
 

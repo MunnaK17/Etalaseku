@@ -159,7 +159,7 @@
                 <?php $__empty_1 = true; $__currentLoopData = $recentApplications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $application): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <div class="px-6 py-4 flex items-center justify-between">
                         <div>
-                            <p class="font-medium text-gray-900"><?php echo e($application->store->name); ?></p>
+                            <p class="font-medium text-gray-900"><?php echo e($application->store->name ?? 'Toko tidak ditemukan'); ?></p>
                             <p class="text-xs text-gray-500"><?php echo e($application->disability_type); ?> - <?php echo e($application->created_at->diffForHumans()); ?></p>
                         </div>
                         <a href="<?php echo e(route('admin.inclusive-applications.show', $application->id)); ?>"
