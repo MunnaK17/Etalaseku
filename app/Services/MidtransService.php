@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\Mail\DigitalProductDelivered;
 use App\Models\Order;
 use App\Models\Subscription;
 use App\Models\Wallet;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Midtrans\Config;
 use Midtrans\Snap;
 use Midtrans\CoreApi;
@@ -144,7 +147,7 @@ class MidtransService
     {
         // Validate signature for security
         if (!config('midtrans.skip_signature_validation', false) && !$this->validateSignature($notification)) {
-            \Log::warning('Midtrans notification signature validation failed', ['order_id' => $notification['order_id'] ?? 'unknown']);
+            Log::warning('Midtrans notification signature validation failed', ['order_id' => $notification['order_id'] ?? 'unknown']);
             return false;
         }
 
@@ -163,16 +166,20 @@ class MidtransService
             return true;
         }
 
+        $shouldSendEmail = false;
+
         if ($transactionStatus == 'capture') {
             if ($fraudStatus == 'challenge') {
                 $order->payment_status = 'pending';
             } else if ($fraudStatus == 'accept') {
                 $order->payment_status = 'paid';
+                $shouldSendEmail = true;
                 // For production, uncomment this line:
                 // $this->creditSellerWallet($order);
             }
         } else if ($transactionStatus == 'settlement') {
             $order->payment_status = 'paid';
+            $shouldSendEmail = true;
             // For production, uncomment this line:
             // $this->creditSellerWallet($order);
         } else if ($transactionStatus == 'pending') {
@@ -185,7 +192,48 @@ class MidtransService
 
         $order->save();
 
+        // Send digital product email if payment is successful
+        if ($shouldSendEmail) {
+            $this->sendDigitalProductEmail($order);
+        }
+
         return true;
+    }
+
+    /**
+     * Send digital product email to buyer if product has download link.
+     */
+    protected function sendDigitalProductEmail(Order $order): void
+    {
+        // Check if this is a digital product with a download link
+        if (!$order->product || $order->product->product_type !== 'digital') {
+            return;
+        }
+
+        $downloadLink = $order->product->digital_product_link;
+        if (!$downloadLink) {
+            Log::info('Digital product order paid but no download link set', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'product_id' => $order->product_id,
+            ]);
+            return;
+        }
+
+        try {
+            Mail::to($order->customer_email)->send(new DigitalProductDelivered($order));
+            Log::info('Digital product email sent via Midtrans callback', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'customer_email' => $order->customer_email,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send digital product email via Midtrans callback', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -216,7 +264,7 @@ class MidtransService
         );
 
         // Log the platform fee (for records)
-        \Log::info('Wallet credit processed', [
+        Log::info('Wallet credit processed', [
             'order_id' => $order->id,
             'order_number' => $order->order_number,
             'total_amount' => $totalAmount,

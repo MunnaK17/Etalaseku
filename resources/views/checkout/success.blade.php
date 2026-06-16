@@ -23,27 +23,28 @@
 <body class="font-sans antialiased bg-gray-50 min-h-screen">
     <div class="max-w-lg mx-auto bg-white min-h-screen shadow-xl">
         @php
-$status = request('status', 'unknown');
+// Check actual order payment status from database
+$actualPaymentStatus = $order->payment_status ?? 'pending';
 $statusMessages = [
-    'success' => ['title' => 'Pembayaran Berhasil!', 'subtitle' => 'Pesanan Anda telah dibayar dan sedang diproses', 'color' => 'green'],
+    'paid' => ['title' => 'Pembayaran Berhasil!', 'subtitle' => 'Pesanan Anda telah dibayar dan sedang diproses', 'color' => 'green'],
     'pending' => ['title' => 'Pembayaran Pending', 'subtitle' => 'Silakan selesaikan pembayaran Anda', 'color' => 'yellow'],
-    'error' => ['title' => 'Pembayaran Gagal', 'subtitle' => 'Terjadi kesalahan. Silakan coba lagi atau hubungi penjual.', 'color' => 'red'],
+    'failed' => ['title' => 'Pembayaran Gagal', 'subtitle' => 'Terjadi kesalahan. Silakan coba lagi atau hubungi penjual.', 'color' => 'red'],
 ];
-$msg = $statusMessages[$status] ?? ['title' => 'Pesanan Diterima!', 'subtitle' => 'Pesanan Anda sedang diproses oleh penjual', 'color' => 'green'];
+$msg = $statusMessages[$actualPaymentStatus] ?? ['title' => 'Pesanan Diterima!', 'subtitle' => 'Pesanan Anda sedang diproses oleh penjual', 'color' => 'green'];
 @endphp
 
 <!-- Success Header -->
 <div class="bg-gradient-to-br from-{{ $msg['color'] }}-500 to-{{ $msg['color'] }}-600 text-white px-5 pt-12 pb-16 text-center">
     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-        @if($status === 'success')
+        @if($actualPaymentStatus === 'paid')
             <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
-        @elseif($status === 'pending')
+        @elseif($actualPaymentStatus === 'pending')
             <svg class="w-10 h-10 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-        @elseif($status === 'error')
+        @elseif($actualPaymentStatus === 'failed')
             <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
@@ -127,7 +128,15 @@ $msg = $statusMessages[$status] ?? ['title' => 'Pesanan Diterima!', 'subtitle' =
                         <div>
                             <p class="text-sm text-green-800 font-medium">Hubungi Penjual</p>
                             <p class="text-xs text-green-600 mt-0.5">Pesanan Anda akan diproses setelah konfirmasi dari penjual.</p>
-                            <a href="{{ $order->store->whatsapp_link }}" target="_blank"
+                            @php
+                                $waNumber = preg_replace('/[^0-9]/', '', $order->store->whatsapp ?? '');
+                                if (str_starts_with($waNumber, '0')) {
+                                    $waNumber = '62' . substr($waNumber, 1);
+                                }
+                                $waLink = $waNumber ? "https://wa.me/{$waNumber}" : '#';
+                                $waMessage = "Halo, saya ingin konfirmasi pembayaran untuk pesanan #{$order->order_number} seharga {$order->formatted_amount}";
+                            @endphp
+                            <a href="{{ $waLink }}?text={{ urlencode($waMessage) }}" target="_blank"
                                class="inline-flex items-center gap-1.5 mt-2 text-sm font-semibold text-green-700 hover:text-green-800">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>

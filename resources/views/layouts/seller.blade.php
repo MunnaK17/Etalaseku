@@ -131,6 +131,10 @@
         }
 
         /* Theme Transition */
+        [x-cloak] {
+            display: none !important;
+        }
+
         * {
             transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, fill 0.3s ease;
         }
@@ -933,6 +937,109 @@
             background-color: var(--bg-hover) !important;
         }
 
+        /* Mobile layout guardrails for seller pages */
+        img,
+        video,
+        iframe,
+        canvas,
+        svg {
+            max-width: 100%;
+        }
+        .card,
+        .stat-card,
+        .action-card,
+        .section-card,
+        .blocks-container,
+        .qr-card,
+        .wallet-card,
+        .transaction-card {
+            min-width: 0;
+        }
+        .table-container,
+        .overflow-x-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            max-width: 100%;
+        }
+        @media (max-width: 1023px) {
+            .appearance-page {
+                max-width: 100% !important;
+                padding: 16px 0 !important;
+            }
+            .appearance-form-col {
+                max-width: none !important;
+                width: 100% !important;
+            }
+        }
+        @media (max-width: 767px) {
+            .card,
+            .stat-card,
+            .action-card,
+            .section-card,
+            .blocks-container,
+            .qr-card,
+            .wallet-card,
+            .transaction-card {
+                border-radius: 12px !important;
+            }
+            .card-header,
+            .page-header,
+            .section-header,
+            .transaction-header {
+                align-items: flex-start !important;
+                flex-direction: column !important;
+                gap: 12px !important;
+            }
+            .page-header-actions,
+            .color-input-row,
+            .upload-grid,
+            .cta-color-row {
+                display: grid !important;
+                grid-template-columns: 1fr !important;
+                width: 100% !important;
+            }
+            .btn-action,
+            .btn-accent,
+            .btn-outline,
+            .btn-share,
+            .btn-upgrade {
+                justify-content: center;
+                max-width: 100%;
+                white-space: normal;
+            }
+            .template-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            .visual-grid,
+            .font-grid,
+            .style-grid {
+                grid-template-columns: 1fr !important;
+            }
+            .toggle-row {
+                align-items: flex-start !important;
+                gap: 12px !important;
+            }
+            .modal-content,
+            .block-selector-modal {
+                width: calc(100vw - 2rem) !important;
+                max-width: calc(100vw - 2rem) !important;
+                padding: 16px !important;
+            }
+            .block-card > .flex {
+                align-items: flex-start !important;
+                gap: 12px !important;
+            }
+            .transaction-table,
+            .transaction-table thead,
+            .transaction-table tbody,
+            .transaction-table th,
+            .transaction-table td,
+            .transaction-table tr {
+                white-space: nowrap;
+            }
+        }
+
         /* Links */
         a {
             color: var(--accent) !important;
@@ -976,9 +1083,17 @@
     <!-- Skip to Content - Accessibility -->
     <a href="#main-content" class="skip-to-content">Langsung ke konten utama</a>
 
-    <div class="flex min-h-screen">
+    <div class="flex min-h-screen" x-data="{ sidebarOpen: false }" @keydown.escape.window="sidebarOpen = false">
+        <div x-show="sidebarOpen"
+             x-cloak
+             x-transition.opacity
+             class="fixed inset-0 z-20 bg-black/50 lg:hidden"
+             @click="sidebarOpen = false"
+             aria-hidden="true"></div>
+
         <!-- Sidebar -->
-        <aside class="w-64 sidebar flex flex-col fixed h-full z-30 border-r">
+        <aside class="w-64 sidebar flex flex-col fixed inset-y-0 left-0 h-full z-30 border-r transform transition-transform duration-200 lg:translate-x-0"
+               :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
             <!-- Logo -->
             <div class="px-6 py-5 border-b border-theme">
                 <a href="{{ route('home') }}" class="flex items-center gap-3">
@@ -1130,16 +1245,26 @@
         </aside>
 
         <!-- Main Content -->
-        <main id="main-content" class="flex-1 ml-64 overflow-auto main-bg min-h-screen">
+        <main id="main-content" class="flex-1 w-full overflow-auto main-bg min-h-screen lg:ml-64">
             <!-- Top Bar -->
-            <header class="header-bg border-b px-8 py-4">
-                <div class="flex items-center justify-between">
-                    <div class="text-sm text-muted">
+            <header class="header-bg border-b px-4 py-3 sm:px-6 lg:px-8 lg:py-4">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex min-w-0 items-center gap-3">
+                        <button type="button"
+                                class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-theme text-secondary lg:hidden"
+                                @click="sidebarOpen = true"
+                                aria-label="Buka menu navigasi">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            </svg>
+                        </button>
+                        <div class="min-w-0 truncate text-sm text-muted">
                         <a href="{{ route('home') }}" class="hover:text-yellow-500 transition">Home</a>
                         <span class="mx-2">/</span>
                         <span class="text-primary">@yield('breadcrumb', 'Seller')</span>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-4">
+                    <div class="flex shrink-0 items-center gap-2 sm:gap-4">
                         <!-- Theme Toggle -->
                         <button onclick="toggleTheme()" class="theme-toggle" title="Toggle theme">
                             <!-- Sun Icon -->
@@ -1176,7 +1301,7 @@
                                  x-transition:enter-end="transform opacity-100 scale-100"
                                  role="dialog"
                                  aria-label="Daftar notifikasi"
-                                 class="notification-dropdown absolute right-0 mt-2 w-80 rounded-xl shadow-xl border py-2 z-50">
+                                 class="notification-dropdown absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-80 rounded-xl shadow-xl border py-2 z-50">
                                 <div class="px-4 py-2 border-b border-theme flex justify-between items-center">
                                     <span class="font-semibold text-primary">Notifikasi</span>
                                     @if($unreadCount > 0)
@@ -1214,7 +1339,7 @@
             </header>
 
             <!-- Page Content -->
-            <div class="px-8 pb-8">
+            <div class="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
                 @if(session('success'))
                     <div role="alert" aria-live="polite" class="mb-6 mt-6 alert-success px-4 py-3 rounded-lg flex items-center gap-2">
                         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

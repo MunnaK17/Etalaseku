@@ -562,6 +562,7 @@ class BlockController extends Controller
             'display_style' => 'card',
             'cta_type' => 'checkout',
             'cta_url' => null,
+            'digital_product_link' => $content['digital_product_link'] ?? null,
             'is_active' => true,
         ]);
 

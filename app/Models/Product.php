@@ -30,6 +30,7 @@ class Product extends Model
         'cta_type',
         'cta_url',
         'digital_file',
+        'digital_product_link',
         'link_group_id',
         'is_active',
         'click_count',

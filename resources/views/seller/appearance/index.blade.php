@@ -10,9 +10,8 @@
 
     /* Layout - Lynk.id Style 2 Columns - Dark Theme */
     .appearance-page {
-        display: flex;
-        gap: 24px;
-        max-width: 1100px;
+        display: block;
+        max-width: 640px;
         margin: 0 auto;
         padding: 24px 0;
     }
@@ -22,12 +21,12 @@
         min-width: 0;
     }
     .appearance-preview-col {
-        width: 430px;
-        flex-shrink: 0;
         position: fixed;
-        right: 32px;
+        right: 16px;
+        left: auto;
         top: 100px;
-        z-index: 100;
+        z-index: 60;
+        width: min(360px, calc(100vw - 32px));
     }
 
     /* Live Preview - Dashboard style, fixed right side */
@@ -35,7 +34,7 @@
         background: #18181b;
         border: 1px solid #3f3f46;
         border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        box-shadow: 0 18px 48px rgba(0,0,0,0.42);
         padding: 16px;
     }
     .appearance-preview-header {
@@ -58,6 +57,49 @@
         justify-content: center;
         color: #a1a1aa;
         transition: all 0.2s;
+    }
+    .appearance-preview-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .appearance-preview-toggle {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #a1a1aa;
+        transition: all 0.2s;
+    }
+    .appearance-preview-toggle:hover {
+        color: #fbbf24;
+        background: #27272a;
+    }
+    .appearance-preview-toggle svg {
+        width: 20px;
+        height: 20px;
+    }
+    .appearance-preview-fab {
+        position: fixed;
+        right: 24px;
+        bottom: 92px;
+        z-index: 65;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        color: #000;
+        font-size: 13px;
+        font-weight: 700;
+        box-shadow: 0 12px 32px rgba(251, 191, 36, 0.35);
+    }
+    .appearance-preview-fab svg {
+        width: 18px;
+        height: 18px;
     }
     .appearance-preview-refresh:hover {
         color: #fbbf24;
@@ -1087,7 +1129,7 @@
     /* Responsive */
     @media (max-width: 1024px) {
         .appearance-page {
-            flex-direction: column;
+            max-width: 100%;
         }
         .appearance-form-col {
             max-width: 100%;
@@ -1095,14 +1137,13 @@
         .appearance-preview-col {
             position: fixed;
             right: 16px;
-            bottom: 80px;
+            bottom: 86px;
             top: auto;
-            width: 320px;
-            z-index: 100;
+            width: min(360px, calc(100vw - 32px));
         }
         .appearance-preview-frame {
-            height: 420px;
-            min-height: 420px;
+            height: min(520px, calc(100vh - 180px));
+            min-height: 360px;
         }
         .save-btn-container {
             position: fixed;
@@ -1112,6 +1153,66 @@
             padding: 16px;
             background: #09090b;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+        }
+    }
+
+    @media (min-width: 1280px) {
+        .appearance-page {
+            margin-left: 48px;
+            margin-right: auto;
+            transform: none;
+        }
+        .appearance-preview-col {
+            left: calc(100vw - 420px) !important;
+            right: auto !important;
+            width: 360px;
+        }
+    }
+
+    @media (min-width: 1536px) {
+        .appearance-page {
+            margin-left: 140px;
+        }
+        .appearance-preview-col {
+            left: calc(100vw - 470px) !important;
+            right: auto !important;
+            width: 410px;
+        }
+    }
+
+    @media (min-width: 1800px) {
+        .appearance-page {
+            margin-left: 260px;
+        }
+        .appearance-preview-col {
+            left: calc(100vw - 500px) !important;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .appearance-preview-col {
+            left: 12px;
+            right: 12px;
+            bottom: 84px;
+            width: auto;
+        }
+        .appearance-preview-card {
+            padding: 12px;
+        }
+        .appearance-preview-header {
+            margin-bottom: 12px;
+        }
+        .appearance-preview-title {
+            font-size: 15px;
+        }
+        .appearance-preview-frame {
+            height: min(460px, calc(100vh - 170px));
+            min-height: 320px;
+        }
+        .appearance-preview-fab {
+            right: 16px;
+            bottom: 88px;
+            padding: 11px 14px;
         }
     }
 
@@ -1219,7 +1320,7 @@
 @endpush
 
 @section('content')
-<div class="appearance-page">
+<div class="appearance-page" x-data="{ previewOpen: window.innerWidth >= 1024 }">
 
     {{-- Left Column: Form --}}
     <div class="appearance-form-col">
@@ -1923,15 +2024,44 @@
     </div>
 
     {{-- Right Column: Live Preview --}}
-    <div class="appearance-preview-col">
+    <button type="button"
+            class="appearance-preview-fab"
+            x-show="!previewOpen"
+            x-cloak
+            x-transition.opacity
+            @click="previewOpen = true"
+            aria-label="Buka live preview">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+        </svg>
+        Live Preview
+    </button>
+
+    <div class="appearance-preview-col"
+         x-show="previewOpen"
+         x-cloak
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-y-3"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 translate-y-3">
         <div class="appearance-preview-card">
             <div class="appearance-preview-header">
-                <h2 class="appearance-preview-title">Preview</h2>
-                <button type="button" class="appearance-preview-refresh" id="refresh-preview-btn" onclick="refreshLivePreview()" title="Refresh Preview">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                </button>
+                <h2 class="appearance-preview-title">Live Preview</h2>
+                <div class="appearance-preview-actions">
+                    <button type="button" class="appearance-preview-refresh" id="refresh-preview-btn" onclick="refreshLivePreview()" title="Refresh Preview" aria-label="Refresh live preview">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </button>
+                    <button type="button" class="appearance-preview-toggle" @click="previewOpen = false" title="Minimize Preview" aria-label="Minimize live preview">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
             <div class="appearance-preview-frame">
                 <iframe

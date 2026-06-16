@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\DigitalProductDelivered;
 use App\Models\Order;
 use App\Models\Wallet;
 use App\Models\Store;
@@ -10,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class AdminOrderController extends Controller
 {
@@ -94,7 +97,7 @@ class AdminOrderController extends Controller
                 ]);
 
                 // Log the platform fee
-                \Log::info('Order approved - wallet credited', [
+                Log::info('Order approved - wallet credited', [
                     'order_id' => $order->id,
                     'order_number' => $order->order_number,
                     'total_amount' => $totalAmount,
@@ -106,9 +109,48 @@ class AdminOrderController extends Controller
                 ]);
             });
 
+            // Send digital product email if applicable
+            $this->sendDigitalProductEmail($order);
+
             return redirect()->back()->with('success', 'Order berhasil di-approve. Saldo seller sudah dikredit.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal mengapprove order: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send digital product email to buyer if product has download link.
+     */
+    private function sendDigitalProductEmail(Order $order): void
+    {
+        // Check if this is a digital product with a download link
+        if (!$order->product || $order->product->product_type !== 'digital') {
+            return;
+        }
+
+        $downloadLink = $order->product->digital_product_link;
+        if (!$downloadLink) {
+            Log::info('Digital product order approved but no download link set', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'product_id' => $order->product_id,
+            ]);
+            return;
+        }
+
+        try {
+            Mail::to($order->customer_email)->send(new DigitalProductDelivered($order));
+            Log::info('Digital product email sent', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'customer_email' => $order->customer_email,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send digital product email', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 

@@ -707,7 +707,6 @@
                                 <input type="text"
                                        :value="formatPriceInput(formData.price)"
                                        inputmode="numeric"
-                                       pattern="[0-9]*"
                                        placeholder="Rp.100.000"
                                        @input="formData.price = parsePriceInput($event.target.value); $event.target.value = formatPriceInput(formData.price)"
                                        @blur="$event.target.value = formatPriceInput(formData.price)"
@@ -775,6 +774,17 @@
                                     </div>
                                 </div>
                             </div>
+                            {{-- Digital Product Link - Only for digital_product --}}
+                            <template x-if="formData.type === 'digital_product'">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Link Produk Digital
+                                        <span class="text-purple-600 font-normal">(Wajib untuk pengiriman otomatis)</span>
+                                    </label>
+                                    <input type="url" x-model="formData.digital_product_link" placeholder="https://example.com/file atau Google Drive link" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <p class="text-xs text-gray-500 mt-1">Link ini akan otomatis dikirim ke email buyer setelah pembayaran dikonfirmasi.</p>
+                                </div>
+                            </template>
                         </div>
                     </template>
 
@@ -971,6 +981,7 @@ function blockDashboard() {
             description: '',
             price: 0,
             cta_type: 'whatsapp',
+            digital_product_link: '',
         },
 
         isUploading: false,
@@ -1240,6 +1251,7 @@ function blockDashboard() {
             this.formData.description = '';
             this.formData.price = 0;
             this.formData.cta_type = this.getDefaultCtaType(type);
+            this.formData.digital_product_link = '';
             this.normalizeCtaTypeForBlockType();
             this.imagePreview = null;
             this.productImagePreview = null;
@@ -1311,6 +1323,7 @@ function blockDashboard() {
                 this.formData.description = content.description || '';
                 this.formData.price = content.price || 0;
                 this.formData.cta_type = content.cta_type || this.getDefaultCtaType(block.type);
+                this.formData.digital_product_link = content.digital_product_link || '';
                 this.normalizeCtaTypeForBlockType();
 
                 // Socials
@@ -1380,6 +1393,7 @@ function blockDashboard() {
                         description: this.formData.description,
                         price: this.formData.price,
                         cta_type: this.formData.cta_type || this.getDefaultCtaType(this.formData.type),
+                        digital_product_link: this.formData.digital_product_link || '',
                     };
                     break;
             }

@@ -9,6 +9,7 @@
     .qr-page-container {
         max-width: 900px;
         margin: 0 auto;
+        width: 100%;
     }
 
     /* Header */
@@ -29,7 +30,7 @@
     /* Main Grid */
     .qr-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         gap: 24px;
     }
     @media (max-width: 768px) {
@@ -44,6 +45,7 @@
         border-radius: 16px;
         overflow: hidden;
         border: 1px solid var(--border-color);
+        min-width: 0;
     }
     .qr-card-header {
         padding: 16px 24px;
@@ -75,17 +77,22 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        min-width: 0;
     }
     .qr-preview-box {
         background: white;
         padding: 16px;
         border-radius: 12px;
         border: 2px dashed var(--border-color);
+        max-width: 100%;
+        overflow: hidden;
     }
     .qr-preview-box img {
-        width: 256px;
-        height: 256px;
+        width: min(256px, calc(100vw - 96px));
+        height: auto;
+        aspect-ratio: 1 / 1;
         object-fit: contain;
+        display: block;
     }
     .qr-preview-text {
         margin-top: 16px;
@@ -117,6 +124,7 @@
     }
     .qr-url-input {
         flex: 1;
+        min-width: 0;
         padding: 12px 16px;
         border: 1.5px solid var(--input-border);
         border-radius: 10px;
@@ -229,6 +237,7 @@
     }
     .qr-color-text {
         flex: 1;
+        min-width: 0;
         padding: 10px 12px;
         border: 1.5px solid var(--border-color);
         border-radius: 8px;
@@ -373,6 +382,50 @@
     /* Additional text color overrides */
     .text-sm.font-medium.text-zinc-300 {
         color: var(--text-secondary) !important;
+    }
+
+    @media (max-width: 640px) {
+        .qr-header {
+            margin-bottom: 20px;
+        }
+        .qr-header h1 {
+            font-size: 22px;
+            line-height: 1.2;
+        }
+        .qr-card-header {
+            padding: 14px 16px;
+        }
+        .qr-card-body {
+            padding: 16px;
+        }
+        .qr-preview-box {
+            padding: 12px;
+        }
+        .qr-preview-box img {
+            width: min(100%, calc(100vw - 88px));
+        }
+        .qr-url-input-group,
+        .qr-color-input-group {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .qr-update-btn,
+        .qr-color-picker {
+            width: 100%;
+        }
+        .qr-colors-grid {
+            grid-template-columns: 1fr;
+        }
+        .qr-size-option span {
+            width: auto;
+            min-width: 56px;
+            padding: 0 10px;
+        }
+        .qr-toast {
+            left: 16px;
+            right: 16px;
+            top: 16px;
+        }
     }
 </style>
 @endpush

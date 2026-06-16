@@ -20,6 +20,10 @@
     </script>
     <style>
         /* Skip to Content - Accessibility */
+        [x-cloak] {
+            display: none !important;
+        }
+
         .skip-to-content {
             position: absolute;
             left: -9999px;
@@ -100,15 +104,59 @@
             transition-duration: 0.01ms !important;
             scroll-behavior: auto !important;
         }
+        img,
+        video,
+        iframe,
+        canvas,
+        svg {
+            max-width: 100%;
+        }
+        .admin-card,
+        .bg-white,
+        .rounded-xl,
+        .rounded-2xl {
+            min-width: 0;
+        }
+        .overflow-x-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+        @media (max-width: 767px) {
+            table {
+                white-space: nowrap;
+            }
+            .flex.items-center.justify-between {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            form .flex,
+            .filter-row {
+                align-items: stretch;
+                flex-direction: column;
+            }
+            button,
+            .btn,
+            a[class*="px-"] {
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
 <body class="font-sans antialiased bg-gray-100">
     <!-- Skip to Content - Accessibility -->
     <a href="#main-content" class="skip-to-content">Langsung ke konten utama</a>
 
-    <div class="flex min-h-screen">
+    <div class="flex min-h-screen" x-data="{ sidebarOpen: false }" @keydown.escape.window="sidebarOpen = false">
+        <div x-show="sidebarOpen"
+             x-cloak
+             x-transition.opacity
+             class="fixed inset-0 z-20 bg-black/50 lg:hidden"
+             @click="sidebarOpen = false"
+             aria-hidden="true"></div>
+
         <!-- Sidebar -->
-        <aside class="w-64 bg-gray-900 text-white flex flex-col">
+        <aside class="fixed inset-y-0 left-0 z-30 flex h-full w-64 transform flex-col bg-gray-900 text-white transition-transform duration-200 lg:translate-x-0"
+               :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
             <!-- Logo -->
             <div class="px-6 py-5 border-b border-gray-800">
                 <a href="{{ route('home') }}" class="flex items-center gap-3">
@@ -123,7 +171,7 @@
             </div>
 
             <!-- Navigation -->
-            <nav class="flex-1 px-4 py-6 space-y-1">
+            <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
                 <a href="{{ route('admin.dashboard') }}"
                    class="flex items-center gap-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,20 +283,30 @@
         </aside>
 
         <!-- Main Content -->
-        <main id="main-content" class="flex-1 overflow-auto">
+        <main id="main-content" class="flex-1 w-full overflow-auto lg:ml-64">
             <!-- Top Bar -->
-            <header class="bg-white border-b border-gray-200 px-8 py-4">
-                <div class="flex items-center justify-between">
-                    <div class="text-sm text-gray-500">
+            <header class="bg-white border-b border-gray-200 px-4 py-3 sm:px-6 lg:px-8 lg:py-4">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex min-w-0 items-center gap-3">
+                        <button type="button"
+                                class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-700 lg:hidden"
+                                @click="sidebarOpen = true"
+                                aria-label="Buka menu navigasi">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            </svg>
+                        </button>
+                        <div class="min-w-0 truncate text-sm text-gray-500">
                         <a href="{{ route('home') }}" class="hover:text-indigo-600">Beranda</a>
                         <span class="mx-2">/</span>
                         <span class="text-gray-900">@yield('breadcrumb', 'Admin')</span>
+                        </div>
                     </div>
                 </div>
             </header>
 
             <!-- Page Content -->
-            <div class="px-8">
+            <div class="px-4 sm:px-6 lg:px-8">
                 @if(session('success'))
                     <div class="mb-6 mt-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg" role="alert" aria-live="polite">
                         <span class="sr-only">Sukses:</span> {{ session('success') }}
