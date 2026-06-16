@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminOrderController;
+use App\Http\Controllers\Admin\AdminSellerController;
 use App\Http\Controllers\Admin\AdminSubscriptionController;
 use App\Http\Controllers\Admin\AdminVerificationController;
 use App\Http\Controllers\Admin\AdminWithdrawalController;
@@ -125,6 +126,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/verifications/{verification}/approve', [AdminVerificationController::class, 'approve'])->name('verifications.approve');
     Route::post('/verifications/{verification}/reject', [AdminVerificationController::class, 'reject'])->name('verifications.reject');
     Route::get('/verifications/{verification}/download/{document}', [AdminVerificationController::class, 'downloadDocument'])->name('verifications.download');
+
+    // Seller Management Routes
+    Route::get('/sellers', [AdminSellerController::class, 'index'])->name('sellers.index');
+    Route::get('/sellers/{store}', [AdminSellerController::class, 'show'])->name('sellers.show');
+    Route::patch('/sellers/{store}/hide', [AdminSellerController::class, 'hide'])->name('sellers.hide');
+    Route::patch('/sellers/{store}/unhide', [AdminSellerController::class, 'unhide'])->name('sellers.unhide');
+    Route::post('/sellers/{store}/suspend', [AdminSellerController::class, 'suspend'])->name('sellers.suspend');
+    Route::post('/sellers/{store}/unsuspend', [AdminSellerController::class, 'unsuspend'])->name('sellers.unsuspend');
+    Route::post('/sellers/{store}/grant-inclusive', [AdminSellerController::class, 'grantInclusive'])->name('sellers.grant-inclusive');
+    Route::post('/sellers/{store}/revoke-inclusive', [AdminSellerController::class, 'revokeInclusive'])->name('sellers.revoke-inclusive');
+    Route::delete('/sellers/{store}/subscription', [AdminSellerController::class, 'cancelSubscription'])->name('sellers.cancel-subscription');
+    Route::delete('/sellers/{store}', [AdminSellerController::class, 'destroy'])->name('sellers.destroy');
 });
 
 // Checkout Routes (Public)
