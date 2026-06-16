@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\SetPasswordController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -61,6 +62,12 @@ Route::middleware('auth')->group(function () {
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
 
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+
+    // Set Password for Google OAuth users
+    Route::get('set-password', [SetPasswordController::class, 'showForm'])
+        ->name('google.set-password.form');
+    Route::post('set-password', [SetPasswordController::class, 'setPassword'])
+        ->name('google.set-password');
 
     // Profile routes
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');

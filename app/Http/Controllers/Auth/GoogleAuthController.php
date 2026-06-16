@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use Throwable;
 
@@ -42,18 +40,32 @@ class GoogleAuthController extends Controller
                 ->withErrors(['email' => 'Akun Google tidak mengirimkan email.']);
         }
 
-        $user = User::firstOrCreate(
-            ['email' => strtolower($googleUser->getEmail())],
-            [
+        $email = strtolower($googleUser->getEmail());
+        $googleId = $googleUser->getId();
+        $avatar = $googleUser->getAvatar();
+
+        // Find existing user by email
+        $user = User::where('email', $email)->first();
+
+        if ($user) {
+            // User exists - update google_id and avatar if needed
+            $user->forceFill([
+                'google_id' => $googleId,
+                'avatar' => $avatar,
+                'email_verified_at' => $user->email_verified_at ?? now(),
+            ])->save();
+        } else {
+            // Create new user with Google OAuth data
+            // Password is NULL for Google users - they must set password to login manually
+            $user = User::create([
                 'name' => $googleUser->getName() ?: $googleUser->getNickname() ?: 'Google User',
-                'password' => Hash::make(Str::random(40)),
+                'email' => $email,
+                'password' => null, // NULL for Google users
+                'google_id' => $googleId,
+                'avatar' => $avatar,
                 'email_verified_at' => now(),
                 'role' => 'user',
-            ]
-        );
-
-        if (!$user->email_verified_at) {
-            $user->forceFill(['email_verified_at' => now()])->save();
+            ]);
         }
 
         Auth::login($user, true);

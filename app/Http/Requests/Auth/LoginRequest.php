@@ -53,7 +53,21 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $credentials = $this->only('email', 'password');
+        $email = strtolower($credentials['email']);
+
+        // Check if user exists and is a Google user without password
+        $user = \App\Models\User::where('email', $email)->first();
+
+        if ($user && $user->isGoogleUser() && !$user->hasPassword()) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'google_user' => 'Akun ini terdaftar menggunakan Google. Silakan login dengan Google atau buat password terlebih dahulu.',
+            ]);
+        }
+
+        if (! Auth::attempt($credentials, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([

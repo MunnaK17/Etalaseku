@@ -40,6 +40,17 @@ class AuthenticatedSessionController extends Controller
         // Check if user has a store, redirect to onboarding if not
         $user = $request->user();
 
+        // Check if user's store is suspended
+        if ($user && $user->store && $user->store->is_suspended) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()
+                ->route('login')
+                ->with('error', 'Akun Anda ditangguhkan. Hubungi admin untuk informasi lebih lanjut.');
+        }
+
         if ($user && $user->isAdmin()) {
             return redirect()->route('admin.dashboard');
         }

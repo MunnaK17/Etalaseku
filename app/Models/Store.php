@@ -71,6 +71,14 @@ class Store extends Model
         'is_verified_seller',
         'verified_at',
         'is_active',
+        'is_hidden',
+        'is_suspended',
+        'suspended_reason',
+        'suspended_at',
+        'suspended_by',
+        'inclusive_granted_at',
+        'inclusive_revoked_at',
+        'inclusive_reviewed_by',
     ];
 
     /**
@@ -85,6 +93,11 @@ class Store extends Model
         'verified_at' => 'datetime',
         'is_active' => 'boolean',
         'cta_button_shadow' => 'boolean',
+        'is_hidden' => 'boolean',
+        'is_suspended' => 'boolean',
+        'suspended_at' => 'datetime',
+        'inclusive_granted_at' => 'datetime',
+        'inclusive_revoked_at' => 'datetime',
     ];
 
     /**
@@ -920,5 +933,220 @@ class Store extends Model
         $cardStyle = $this->theme_config['card_style'] ?? 'rounded-2xl shadow-md';
 
         return $cardStyle;
+    }
+
+    // ============================================
+    // Seller Management Methods (Admin Features)
+    // ============================================
+
+    /**
+     * Scope to get visible stores only (not hidden).
+     */
+    public function scopeVisible($query)
+    {
+        return $query->where('is_hidden', false);
+    }
+
+    /**
+     * Scope to get hidden stores.
+     */
+    public function scopeHidden($query)
+    {
+        return $query->where('is_hidden', true);
+    }
+
+    /**
+     * Scope to get suspended stores.
+     */
+    public function scopeSuspended($query)
+    {
+        return $query->where('is_suspended', true);
+    }
+
+    /**
+     * Scope to get non-suspended stores.
+     */
+    public function scopeNotSuspended($query)
+    {
+        return $query->where('is_suspended', false);
+    }
+
+    /**
+     * Scope to get stores by plan.
+     */
+    public function scopeOfPlan($query, string $plan)
+    {
+        return $query->where('plan', $plan);
+    }
+
+    /**
+     * Scope to get inclusive sellers.
+     */
+    public function scopeInclusive($query)
+    {
+        return $query->where('is_inclusive_seller', true);
+    }
+
+    /**
+     * Check if store is hidden.
+     */
+    public function isHidden(): bool
+    {
+        return (bool) $this->is_hidden;
+    }
+
+    /**
+     * Check if store is suspended.
+     */
+    public function isSuspended(): bool
+    {
+        return (bool) $this->is_suspended;
+    }
+
+    /**
+     * Hide the store.
+     */
+    public function hide(): bool
+    {
+        return $this->update(['is_hidden' => true]);
+    }
+
+    /**
+     * Unhide the store.
+     */
+    public function unhide(): bool
+    {
+        return $this->update(['is_hidden' => false]);
+    }
+
+    /**
+     * Suspend the store with reason.
+     */
+    public function suspend(User $admin, string $reason): bool
+    {
+        return $this->update([
+            'is_suspended' => true,
+            'suspended_reason' => $reason,
+            'suspended_at' => now(),
+            'suspended_by' => $admin->id,
+        ]);
+    }
+
+    /**
+     * Unsuspend the store.
+     */
+    public function unsuspend(): bool
+    {
+        return $this->update([
+            'is_suspended' => false,
+            'suspended_reason' => null,
+            'suspended_at' => null,
+            'suspended_by' => null,
+        ]);
+    }
+
+    /**
+     * Grant inclusive seller status.
+     */
+    public function grantInclusive(User $admin): bool
+    {
+        return $this->update([
+            'is_inclusive_seller' => true,
+            'inclusive_granted_at' => now(),
+            'inclusive_revoked_at' => null,
+            'inclusive_reviewed_by' => $admin->id,
+        ]);
+    }
+
+    /**
+     * Revoke inclusive seller status.
+     */
+    public function revokeInclusive(User $admin): bool
+    {
+        return $this->update([
+            'is_inclusive_seller' => false,
+            'inclusive_revoked_at' => now(),
+            'inclusive_reviewed_by' => $admin->id,
+        ]);
+    }
+
+    /**
+     * Cancel subscription and reset to free.
+     */
+    public function cancelSubscription(): bool
+    {
+        return $this->update([
+            'plan' => 'free',
+            'plan_expires_at' => null,
+        ]);
+    }
+
+    /**
+     * Get suspension info as array.
+     */
+    public function getSuspensionInfoAttribute(): ?array
+    {
+        if (!$this->is_suspended) {
+            return null;
+        }
+
+        return [
+            'reason' => $this->suspended_reason,
+            'suspended_at' => $this->suspended_at,
+            'suspended_by' => $this->suspended_by,
+        ];
+    }
+
+    /**
+     * Get inclusive status info as array.
+     */
+    public function getInclusiveStatusInfoAttribute(): ?array
+    {
+        if (!$this->is_inclusive_seller) {
+            return null;
+        }
+
+        return [
+            'granted_at' => $this->inclusive_granted_at,
+            'revoked_at' => $this->inclusive_revoked_at,
+            'reviewed_by' => $this->inclusive_reviewed_by,
+        ];
+    }
+
+    /**
+     * Get admin who suspended the store.
+     */
+    public function suspendedByAdmin(): ?User
+    {
+        return $this->suspended_by ? User::find($this->suspended_by) : null;
+    }
+
+    /**
+     * Get admin who reviewed inclusive status.
+     */
+    public function inclusiveReviewedByAdmin(): ?User
+    {
+        return $this->inclusive_reviewed_by ? User::find($this->inclusive_reviewed_by) : null;
+    }
+
+    /**
+     * Get subscription display info.
+     */
+    public function getSubscriptionInfoAttribute(): array
+    {
+        $info = [
+            'plan' => $this->plan,
+            'is_pro' => $this->isPro(),
+            'expires_at' => $this->plan_expires_at,
+            'is_expired' => $this->plan_expires_at ? $this->plan_expires_at->isPast() : false,
+        ];
+
+        if ($this->plan_expires_at) {
+            $info['days_remaining'] = max(0, now()->diffInDays($this->plan_expires_at, false));
+        } else {
+            $info['days_remaining'] = null;
+        }
+
+        return $info;
     }
 }

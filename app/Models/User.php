@@ -23,6 +23,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'google_id',
+        'avatar',
     ];
 
     /**
@@ -60,6 +62,22 @@ class User extends Authenticatable
 
         return $this->role === 'admin'
             || in_array(strtolower($this->email), array_map('strtolower', $adminEmails), true);
+    }
+
+    /**
+     * Check if user registered via Google OAuth
+     */
+    public function isGoogleUser(): bool
+    {
+        return !empty($this->google_id);
+    }
+
+    /**
+     * Check if user has a password set
+     */
+    public function hasPassword(): bool
+    {
+        return !empty($this->password);
     }
 
     /**

@@ -20,11 +20,23 @@ class AdminMiddleware
 
         $user = $request->user();
 
-        if ($user->isAdmin()) {
-            return $next($request);
+        // Check if user is admin
+        if (!$user->isAdmin()) {
+            abort(403, 'Access denied. Admin only.');
         }
 
-        // Deny access
-        abort(403, 'Access denied. Admin only.');
+        // Check if user's store is suspended (prevent admin access if suspended)
+        if ($user->store && $user->store->is_suspended) {
+            // Log out the user
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()
+                ->route('login')
+                ->with('error', 'Akun Anda ditangguhkan. Hubungi admin untuk informasi lebih lanjut.');
+        }
+
+        return $next($request);
     }
 }

@@ -1,8 +1,5 @@
 @php
-    $loginAction = Route::has('login') ? route('login') : url('/login');
-    $registerUrl = Route::has('register') ? route('register') : url('/register');
-    $forgotUrl = Route::has('password.request') ? route('password.request') : url('/forgot-password');
-    $googleUrl = Route::has('auth.google') ? route('auth.google') : url('/auth/google');
+    $submitUrl = route('google.set-password');
 @endphp
 
 <!DOCTYPE html>
@@ -10,7 +7,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Masuk - EtalaseKu</title>
+    <title>Atur Password - EtalaseKu</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -154,85 +151,42 @@
         </header>
 
         <main class="flex flex-1 flex-col items-center px-6 lg:flex-row lg:px-12">
-            <section class="hidden items-center justify-center py-4 lg:flex lg:w-[55%]" aria-label="Ilustrasi login">
+            <section class="hidden items-center justify-center py-4 lg:flex lg:w-[55%]" aria-label="Ilustrasi set password">
                 <div class="flex max-h-[78vh] max-w-full items-center justify-center overflow-hidden rounded-2xl shadow-lg" style="background: var(--illustration-bg); aspect-ratio: 4 / 3">
-                    <img src="{{ asset('images/login.png') }}" alt="Ilustrasi aksesibilitas EtalaseKu untuk login" class="h-full w-full object-contain">
+                    <img src="{{ asset('images/login.png') }}" alt="Ilustrasi atur password untuk akun Google" class="h-full w-full object-contain">
                 </div>
             </section>
 
-            <section class="flex w-full items-center justify-center py-8 lg:w-[45%] lg:py-0" aria-label="Form login">
+            <section class="flex w-full items-center justify-center py-8 lg:w-[45%] lg:py-0" aria-label="Form atur password">
                 <div class="w-full max-w-[420px]">
-                    <h1 class="text-2xl font-bold" style="color: var(--text-primary);">Selamat Datang Kembali</h1>
+                    <h1 class="text-2xl font-bold" style="color: var(--text-primary);">Atur Password</h1>
                     <p class="mb-8 mt-2 text-sm" style="color: var(--text-muted);">
-                        Belum punya akun?
-                        <a href="{{ $registerUrl }}" class="font-semibold transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2" style="color: var(--accent); --tw-ring-color: var(--accent);">
-                            Daftar di sini
-                        </a>
+                        Buat password untuk akun Google Anda agar bisa login tanpa Google.
                     </p>
 
-                    @if (session('status'))
+                    @if (session('status') === 'google-password-set')
                         <div class="mb-6 rounded-lg border px-4 py-3 text-sm font-medium" style="border-color: var(--success); background: color-mix(in srgb, var(--success) 10%, transparent); color: var(--success);" role="status">
-                            {{ session('status') }}
+                            Password berhasil dibuat. Sekarang Anda bisa login dengan email dan password.
                         </div>
                     @endif
 
-                    @if ($errors->has('google_user'))
-                        <div class="mb-6 rounded-lg border px-4 py-3 text-sm font-medium" style="border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent);" role="alert">
-                            <div class="flex items-start gap-2">
-                                <svg class="h-5 w-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <div>
-                                    <p class="font-semibold">Akun Google</p>
-                                    <p class="mt-1">{{ $errors->first('google_user') }}</p>
-                                </div>
-                            </div>
+                    @if (session('error'))
+                        <div class="mb-6 rounded-lg border px-4 py-3 text-sm font-medium" style="border-color: var(--error); background: color-mix(in srgb, var(--error) 10%, transparent); color: var(--error);" role="alert">
+                            {{ session('error') }}
                         </div>
                     @endif
 
-                    @error('google_user')
-                        <div class="mb-6 rounded-lg border px-4 py-3 text-sm font-medium" style="border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent);" role="alert">
-                            <div class="flex items-start gap-2">
-                                <svg class="h-5 w-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <div>
-                                    <p class="font-semibold">Akun Google</p>
-                                    <p class="mt-1">{{ $message }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    @enderror
-
-                    <form method="POST" action="{{ $loginAction }}" class="space-y-5">
+                    <form method="POST" action="{{ $submitUrl }}" class="space-y-5">
                         @csrf
 
                         <div>
-                            <label for="email" class="block text-sm font-medium" style="color: var(--text-secondary);">Email</label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                value="{{ old('email') }}"
-                                required
-                                autofocus
-                                autocomplete="username"
-                                class="mt-1.5 block w-full rounded-lg shadow-sm placeholder:text-zinc-500 focus:ring-offset-0"
-                                style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); --tw-placeholder-color: var(--text-muted); --tw-ring-color: var(--accent);"
-                            >
-                            @error('email')
-                                <p class="mt-2 text-sm" style="color: var(--error);">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label for="password" class="block text-sm font-medium" style="color: var(--text-secondary);">Password</label>
+                            <label for="password" class="block text-sm font-medium" style="color: var(--text-secondary);">Password Baru</label>
                             <input
                                 id="password"
                                 name="password"
                                 type="password"
                                 required
-                                autocomplete="current-password"
+                                autocomplete="new-password"
                                 class="mt-1.5 block w-full rounded-lg shadow-sm placeholder:text-zinc-500 focus:ring-offset-0"
                                 style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); --tw-placeholder-color: var(--text-muted); --tw-ring-color: var(--accent);"
                             >
@@ -242,64 +196,32 @@
                         </div>
 
                         <div>
-                            <label for="bot_answer" class="block text-sm font-medium" style="color: var(--text-secondary);">
-                                Verifikasi: {{ $mathQuestion ?? '9 + 7' }} =
-                            </label>
+                            <label for="password_confirmation" class="block text-sm font-medium" style="color: var(--text-secondary);">Konfirmasi Password</label>
                             <input
-                                id="bot_answer"
-                                name="bot_answer"
-                                type="number"
-                                inputmode="numeric"
+                                id="password_confirmation"
+                                name="password_confirmation"
+                                type="password"
                                 required
-                                autocomplete="off"
-                                placeholder="16"
+                                autocomplete="new-password"
+                                placeholder="Masukkan password yang sama"
                                 class="mt-1.5 block w-full rounded-lg shadow-sm placeholder:text-zinc-500 focus:ring-offset-0"
                                 style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); --tw-placeholder-color: var(--text-muted); --tw-ring-color: var(--accent);"
                             >
-                            @error('bot_answer')
+                            @error('password_confirmation')
                                 <p class="mt-2 text-sm" style="color: var(--error);">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <div class="flex items-center justify-between gap-4">
-                            <label class="flex cursor-pointer select-none items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    name="remember"
-                                    class="rounded focus:ring-offset-0"
-                                    style="border: 1px solid var(--border-color); background: var(--bg-tertiary); color: var(--accent); --tw-ring-color: var(--accent);"
-                                >
-                                <span class="text-sm" style="color: var(--text-muted);">Ingat saya</span>
-                            </label>
-
-                            <a href="{{ $forgotUrl }}" class="text-sm font-medium transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2" style="color: var(--accent); --tw-ring-color: var(--accent);">
-                                Lupa password?
-                            </a>
-                        </div>
-
                         <button type="submit" class="inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2" style="background: var(--accent); color: #000; --tw-ring-color: var(--accent);">
-                            Masuk
+                            Simpan Password
                         </button>
                     </form>
 
-                    <div class="relative my-6">
-                        <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t" style="border-color: var(--border-color);"></div>
-                        </div>
-                        <div class="relative flex justify-center text-xs uppercase tracking-wider">
-                            <span class="px-3" style="background: var(--bg-primary); color: var(--text-muted);">atau masuk dengan</span>
-                        </div>
+                    <div class="mt-6 text-center">
+                        <a href="{{ route('profile.edit') }}" class="text-sm font-medium transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2" style="color: var(--accent); --tw-ring-color: var(--accent);">
+                            Kembali ke Profil
+                        </a>
                     </div>
-
-                    <a href="{{ $googleUrl }}" class="inline-flex w-full items-center justify-center gap-3 rounded-lg border px-4 py-2.5 text-sm font-medium transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2" style="border-color: var(--border-color); background: transparent; color: var(--text-secondary); --tw-ring-color: var(--accent);">
-                        <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                            <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z"/>
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06L5.84 9.9C6.71 7.3 9.14 5.38 12 5.38z"/>
-                        </svg>
-                        Masuk dengan Google
-                    </a>
                 </div>
             </section>
         </main>
