@@ -632,6 +632,23 @@
             color: var(--accent);
         }
 
+        /* Active section indicator */
+        .nav-link.active {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
         /* Text colors */
         .text-heading {
             color: var(--text-primary);
@@ -711,7 +728,7 @@
 
                 <div class="hidden items-center gap-6 md:flex">
                     @foreach ($navLinks as $link)
-                        <a href="#{{ $link['id'] }}" class="nav-link rounded px-2 py-1 text-sm transition focus-visible:outline-none focus-visible:ring-2" style="--tw-ring-color: var(--accent);">
+                        <a href="#{{ $link['id'] }}" class="nav-link relative rounded px-2 py-1 text-sm transition focus-visible:outline-none focus-visible:ring-2" style="--tw-ring-color: var(--accent);">
                             {{ $link['label'] }}
                         </a>
                     @endforeach
@@ -810,7 +827,7 @@
                         <span>Ganti Tema</span>
                     </button>
                     @foreach ($navLinks as $link)
-                        <a href="#{{ $link['id'] }}" class="nav-link block rounded px-2 py-2 text-sm">{{ $link['label'] }}</a>
+                        <a href="#{{ $link['id'] }}" class="mobile-nav-link nav-link block rounded px-2 py-2 text-sm">{{ $link['label'] }}</a>
                     @endforeach
                     <hr style="border-color: var(--border-color);">
                     @auth
@@ -829,6 +846,22 @@
 
         <main id="hero">
             <section class="relative overflow-hidden px-6 pb-16 pt-36 md:pb-24 md:pt-44">
+                <!-- Background image (replace with actual image file) -->
+                <div class="pointer-events-none absolute inset-0" style="background-image: url('{{ asset('images/bg-hero.png') }}'); background-size: cover; background-position: center; opacity: 0.3;" aria-hidden="true">
+                    <!-- Fallback gradient overlay if image fails -->
+                    <div class="absolute inset-0" style="background: radial-gradient(ellipse at 20% 20%, rgba(255, 215, 0, 0.15) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(255, 215, 0, 0.1) 0%, transparent 50%);"></div>
+                </div>
+
+                <!-- Floating geometric shapes -->
+                <div class="pointer-events-none absolute left-[10%] top-[20%] h-32 w-32 rotate-12 rounded-2xl border opacity-20" style="border-color: var(--accent); background: linear-gradient(135deg, var(--accent-light), transparent);" aria-hidden="true"></div>
+                <div class="pointer-events-none absolute right-[15%] top-[30%] h-24 w-24 rotate-45 rounded-xl border opacity-15" style="border-color: var(--accent); background: linear-gradient(45deg, var(--accent-light), transparent);" aria-hidden="true"></div>
+                <div class="pointer-events-none absolute left-[20%] bottom-[30%] h-20 w-20 rotate-12 rounded-full border opacity-10" style="border-color: var(--accent);" aria-hidden="true"></div>
+                <div class="pointer-events-none absolute right-[25%] bottom-[20%] h-40 w-40 rotate-45 rounded-2xl border opacity-15" style="border-color: var(--accent); background: linear-gradient(135deg, var(--accent-light), transparent);" aria-hidden="true"></div>
+
+                <!-- Grid pattern overlay -->
+                <div class="pointer-events-none absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(var(--accent) 1px, transparent 1px), linear-gradient(90deg, var(--accent) 1px, transparent 1px); background-size: 60px 60px;" aria-hidden="true"></div>
+
+                <!-- Existing glow effects -->
                 <div class="pointer-events-none absolute -left-24 -top-48 h-[500px] w-[500px] rounded-full blur-[120px] pulse-glow" style="background: var(--glow-yellow);" aria-hidden="true"></div>
                 <div class="pointer-events-none absolute -bottom-36 -right-24 h-[400px] w-[400px] rounded-full blur-[100px] pulse-glow" style="background: var(--glow-yellow-light); animation-delay: -2s;" aria-hidden="true"></div>
 
@@ -869,7 +902,7 @@
                             </div>
                         </div>
 
-                        <div class="relative mx-auto w-full max-w-sm md:max-w-md animate-on-scroll fade-right" style="animation-delay: 0.2s;">
+                        <div class="relative mx-auto hidden w-full max-w-sm md:max-w-md md:block animate-on-scroll fade-right" style="animation-delay: 0.2s;">
                             <div class="rounded-[2rem] border p-5 shadow-xl float-animation" style="background: var(--bg-secondary); border-color: var(--border-color); box-shadow: 0 25px 50px -12px var(--shadow-color, rgba(0,0,0,0.25));">
                                 <div class="flex items-center gap-3 border-b pb-4" style="border-color: var(--border-color);">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-full font-bold" style="background: var(--accent-light); color: var(--accent);">K</div>
@@ -911,6 +944,7 @@
                         <p class="mt-4 text-sm leading-relaxed md:text-base" style="color: var(--text-muted);">Semua yang dibutuhkan untuk membuat katalog online yang rapi, mudah dibagikan, dan dipercaya pelanggan.</p>
                     </div>
 
+                    <!-- Feature Grid -->
                     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
                         @foreach ($fiturUtama as $index => $item)
                             <article class="feature-card rounded-2xl border p-5 animate-on-scroll" style="background: var(--bg-card); border-color: var(--border-color); --stagger-index: {{ $index }};">
@@ -1263,6 +1297,87 @@
                 updateArrows(); // Initial state
             }
         });
+
+        // ============================================
+        // FEATURE CAROUSEL (Mobile Only)
+        // ============================================
+        (function initFeatureCarousel() {
+            const featureCarousel = document.getElementById('featureCarousel');
+            const featureDotsContainer = document.getElementById('featureCarouselDots');
+
+            // Only init on mobile
+            if (!featureCarousel || !featureDotsContainer || window.innerWidth >= 768) return;
+
+            const cards = featureCarousel.querySelectorAll('.feature-card');
+            const totalCards = cards.length;
+
+            // Create dots
+            for (let i = 0; i < totalCards; i++) {
+                const dot = document.createElement('button');
+                dot.type = 'button';
+                dot.className = 'dot' + (i === 0 ? ' active' : '');
+                dot.setAttribute('aria-label', `Go to card ${i + 1}`);
+                dot.onclick = () => scrollToFeatureCard(i);
+                featureDotsContainer.appendChild(dot);
+            }
+
+            function scrollToFeatureCard(index) {
+                const card = cards[index];
+                if (card) {
+                    const scrollLeft = card.offsetLeft - 20;
+                    featureCarousel.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+                }
+            }
+
+            function updateFeatureDots() {
+                const scrollPos = featureCarousel.scrollLeft;
+                const cardWidth = cards[0]?.offsetWidth + 16 || 296;
+                const activeIndex = Math.round(scrollPos / cardWidth);
+
+                const dots = featureDotsContainer.querySelectorAll('.dot');
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === activeIndex);
+                });
+            }
+
+            featureCarousel.addEventListener('scroll', updateFeatureDots);
+            updateFeatureDots();
+        })();
+
+        function scrollFeatureCarousel(direction) {
+            const featureCarousel = document.getElementById('featureCarousel');
+            if (!featureCarousel || window.innerWidth >= 768) return;
+            const cardWidth = 296 + 16;
+            featureCarousel.scrollBy({ left: direction * cardWidth, behavior: 'smooth' });
+        }
+
+        // ============================================
+        // ACTIVE SECTION ON SCROLL
+        // ============================================
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
+
+        function setActiveSection() {
+            const scrollPosition = window.scrollY + 150;
+
+            sections.forEach((section) => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.offsetHeight;
+                const sectionId = section.getAttribute('id');
+
+                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                    navLinks.forEach((link) => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === `#${sectionId}`) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }
+
+        window.addEventListener('scroll', setActiveSection);
+        setActiveSection(); // Set initial state
 
         // ============================================
         // PARALLAX EFFECT FOR BACKGROUND GLOWS
